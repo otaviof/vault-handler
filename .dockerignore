@@ -1,0 +1,7 @@
+.git*
+.editorconfig
+.vscode
+README.md
+build
+test
+vendor

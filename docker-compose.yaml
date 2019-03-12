@@ -1,0 +1,18 @@
+---
+version: "2"
+
+services:
+  vault:
+    image: vault:1.0.3
+    ports:
+      - 8200:8200
+    volumes:
+      - .data:/vault/file
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+      VAULT_TOKEN: vault-root-token
+      VAULT_DEV_ROOT_TOKEN_ID: vault-root-token
+      BACKEND: file
+    cap_add:
+      - IPC_LOCK
+    network_mode: bridge

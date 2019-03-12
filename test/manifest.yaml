@@ -1,0 +1,17 @@
+# manifest listing the secrets to copy from Vault
+secrets:
+  # group name, used to name files, or will be employed as a Kubernetes Secret name.
+  name:
+    # path in vault
+    path: secrets/dir1/dir2
+    # type of format the secret is stored, use "file" to save it to a file, or a valid Kubernetes
+    # Secret type to copy it to the cluster.
+    type: file # kubernetes.io/tls
+    # data contained in respective vault path.
+    data:
+      # entity name, employed to name "file" or "key" for Kubernetes secret
+      - name: keystore
+        # file extension
+        extension: jks # when using "file" as type
+        # unzip payload
+        unzip: true # only when having "file" as type

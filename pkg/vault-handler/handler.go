@@ -1,6 +1,7 @@
 package vaulthandler
 
 import (
+	"fmt"
 	"log"
 	"path"
 )
@@ -9,6 +10,33 @@ import (
 type Handler struct {
 	config *Config
 	vault  *Vault
+}
+
+// persist a slice of bytes to file-system.
+func (h *Handler) persist(data *SecretData, payload []byte) error {
+	var err error
+
+	filePath := path.Join(h.config.OutputDir, fmt.Sprintf("%s.%s", data.Name, data.Extension))
+	log.Printf("[Handler] Writting '%s'", filePath)
+
+	file := NewFile(filePath, payload)
+
+	if data.Unzip {
+		log.Print("[Handler] Extracting ZIP payload.")
+		if err = file.Unzip(); err != nil {
+			return err
+		}
+	}
+
+	if h.config.DryRun {
+		log.Printf("[DRY-RUN] File '%s' is not written to file-system!", filePath)
+	} else {
+		if err = file.Write(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Run app main loop.
@@ -28,22 +56,28 @@ func (h *Handler) Run(manifest *Manifest) error {
 	for groupName, secrets := range manifest.Secrets {
 		log.Printf("[Handler] Handling secrets for '%s' group...", groupName)
 		log.Printf("[Handler] [%s] Vault path '%s'", groupName, secrets.Path)
+
 		for _, data := range secrets.Data {
 			log.Printf("[Handler] [%s] Reading data from Vault '%s.%s' (unzip: %v)",
 				groupName, data.Name, data.Extension, data.Unzip)
 
+			// putting together the secret path in vault
 			vaultPath := secrets.Path
 			if data.NameAsSubPath {
 				vaultPath = path.Join(vaultPath, data.Name)
 			}
 			log.Printf("[Handler] [%s] '%s' path in Vault: '%s'", data.Name, groupName, vaultPath)
 
+			// loading secret from vault
 			payload := []byte{}
 			if payload, err = h.vault.Read(vaultPath, data.Name); err != nil {
 				return err
 			}
 
-			log.Printf("%s=%s", data.Name, payload)
+			// saving data to disk
+			if err = h.persist(&data, payload); err != nil {
+				return err
+			}
 		}
 	}
 

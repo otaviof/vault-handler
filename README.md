@@ -1,8 +1,9 @@
 # `vault-handler`
 
-Is a command-line tool to download and manipulate data obtained from Vault. The primary-use case
-of this application is to be used as a init-container, where it's given a manifest file, and based
-in this manifest, `vault-handler` will create files accordingly.
+Is a command-line tool to download and manipulate data obtained from
+[Vault](https://www.vaultproject.io). The primary-use case of this application is to be used as a
+init-container, where is given a manifest file, and based on this manifest, `vault-handler` will
+create files accordingly.
 
 ## Installing
 
@@ -10,7 +11,45 @@ in this manifest, `vault-handler` will create files accordingly.
 go get -u github.com/otaviof/vault-handler/cmd/vault-handler
 ```
 
-## Manifest
+## HashiCorp Vault
+
+This application is a client of Vault. You can choose either
+[AppRole](https://www.vaultproject.io/docs/auth/approle.html) type of authentication, which will
+request a runtime token, or directly use a
+[pre-requested token](https://www.vaultproject.io/docs/auth/token.html). Both ways are possible, but
+AppRole
+would be the recommended method.
+
+## Configuration
+
+### Command-Line
+
+After installing, please consider `vault-handler --help` for the command line help text. And the
+following parameters are used in command-line:
+
+- `--output-dir`: Output directory, where secret files will be written;
+- `--vault-addr`: Vault API endpoint;
+- `--vault-token`: Vault API token. Must not be used in combination with `--vault-role-id` or
+  `--vault-secret-id`;
+- `--vault-role-id`: AppRole role-id;
+- `--vault-secret-id`: AppRole secret-id;
+- `--dry-run`: Dry-run mode, no data will be written;
+
+All the options in command-line can be set via environment variables. The convention of
+environment variable names to add a prefix, `VAULT_HANDLER`, and the option name in capitals,
+replacing dashes (`-`) by underscore (`_`). For instance, `--vault-addr` would become
+`VAULT_HANDLER_VAULT_ADDR` in environment.
+
+#### Usage
+
+As a example of how to use `vault-handler` in command-line, consider the next example. The manifest
+file is the last argument, and you can inform more than one manifest file.
+
+``` bash
+vault-handler --output-dir /var/tmp --dry-run <path/to/manifest.yaml>
+```
+
+### Manifest
 
 The following snippet is a manifest example.
 

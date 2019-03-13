@@ -7,12 +7,12 @@ import (
 
 // Config object for vault-handler.
 type Config struct {
-	DryRun        bool
-	OutputDir     string
-	VaultAddr     string
-	VaultToken    string
-	VaultRoleID   string
-	VaultSecretID string
+	DryRun        bool   // dry-run flag
+	OutputDir     string // output directory path
+	VaultAddr     string // vault api endpoint
+	VaultToken    string // vault token
+	VaultRoleID   string // vault approle role-id
+	VaultSecretID string // vault approle secret-id
 }
 
 // Validate configuration object.

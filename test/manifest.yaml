@@ -12,8 +12,8 @@ secrets:
       # entity name, employed to name "file" or "key" for Kubernetes secret
       - name: foo
         # file extension
-        extension: jks # when using "file" as type
+        extension: txt # when using "file" as type
         # unzip payload
-        unzip: true # only when having "file" as type
+        unzip: false # only when having "file" as type
         # use key-name as part of vault path
         nameAsSubPath: false

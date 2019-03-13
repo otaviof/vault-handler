@@ -13,10 +13,11 @@ type Handler struct {
 }
 
 // persist a slice of bytes to file-system.
-func (h *Handler) persist(data *SecretData, payload []byte) error {
+func (h *Handler) persist(groupName string, data *SecretData, payload []byte) error {
 	var err error
 
-	filePath := path.Join(h.config.OutputDir, fmt.Sprintf("%s.%s", data.Name, data.Extension))
+	fileName := fmt.Sprintf("%s.%s.%s", groupName, data.Name, data.Extension)
+	filePath := path.Join(h.config.OutputDir, fileName)
 	log.Printf("[Handler] Writting '%s'", filePath)
 
 	file := NewFile(filePath, payload)
@@ -75,7 +76,7 @@ func (h *Handler) Run(manifest *Manifest) error {
 			}
 
 			// saving data to disk
-			if err = h.persist(&data, payload); err != nil {
+			if err = h.persist(groupName, &data, payload); err != nil {
 				return err
 			}
 		}

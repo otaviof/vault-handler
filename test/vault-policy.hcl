@@ -1,5 +1,5 @@
 path "secret/*" {
-  capabilities = [ "read" ]
+  capabilities = [ "create", "read", "update" ]
 }
 
 path "auth/approle/login" {

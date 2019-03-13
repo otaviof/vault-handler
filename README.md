@@ -1,3 +1,5 @@
+<div style="text-align:center"><img src ="./assets/logo/vault-handler.png"/></div>
+
 # `vault-handler`
 
 Is a command-line tool to download and manipulate data obtained from

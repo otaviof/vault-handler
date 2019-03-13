@@ -8,6 +8,11 @@ function die () {
     exit 1
 }
 
+function enable_secrets_kv() {
+    vault secrets enable -version=2 kv || \
+        die "Can't enable secrets kv!"
+}
+
 function enable_approle() {
     if ! vault auth list |grep -q approle ; then
         vault auth enable approle || \
@@ -58,6 +63,7 @@ function register_app() {
 # Main
 #
 
+enable_secrets_kv
 enable_approle
 write_policy
 create_approle_app

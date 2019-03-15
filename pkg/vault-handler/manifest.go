@@ -12,7 +12,6 @@ type Manifest struct {
 // Secrets map with group-name, metadata and secrets list.
 type Secrets struct {
 	Path string       `yaml:"path"`
-	Type string       `yaml:"type"`
 	Data []SecretData `yaml:"data"`
 }
 

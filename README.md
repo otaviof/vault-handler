@@ -2,7 +2,7 @@
     <img src ="./assets/logo/vault-handler.png"/>
 </p>
 
-# `vault-handler`
+# `vault-handler` (WIP)
 
 Is a command-line tool to download and manipulate data obtained from
 [Vault](https://www.vaultproject.io). The primary-use case of this application is to be used as a

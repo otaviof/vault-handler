@@ -1,4 +1,6 @@
-<div style="text-align:center"><img src ="./assets/logo/vault-handler.png"/></div>
+<p align="center">
+    <img src ="./assets/logo/vault-handler.png"/>
+</p>
 
 # `vault-handler`
 

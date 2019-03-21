@@ -21,8 +21,7 @@ This application is a client of Vault. You can choose either
 [AppRole](https://www.vaultproject.io/docs/auth/approle.html) type of authentication, which will
 request a runtime token, or directly use a
 [pre-requested token](https://www.vaultproject.io/docs/auth/token.html). Both ways are possible, but
-AppRole
-would be the recommended method.
+AppRole would be the recommended method.
 
 ## Configuration
 

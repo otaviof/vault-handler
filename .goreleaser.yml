@@ -1,0 +1,18 @@
+---
+project_name: vault-handler
+dist: ./build/dist
+
+archive:
+  format: tar.gz
+
+builds:
+  - binary: vault-handler
+    main: ./cmd/vault-handler/vault_handler.go
+    goos:
+      - linux
+    env:
+      - CGO_ENABLED=0
+    flags:
+      -a
+    goarch:
+      - amd64

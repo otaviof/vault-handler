@@ -32,7 +32,7 @@ release: release-go release-docker
 	@echo "# Uploaded vault-handler v'$(VERSION)'!"
 
 release-go:
-	git tag --annotate $(VERSION)
+	git tag $(VERSION)
 	git push origin $(VERSION)
 	goreleaser --rm-dist
 

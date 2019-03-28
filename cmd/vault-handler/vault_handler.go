@@ -44,7 +44,7 @@ func bootstrap() *vaulthandler.Handler {
 	}
 
 	if err = handler.Authenticate(); err != nil {
-		log.Fatalf("[ERROR] On authenticating agasint Vault: '%s'", err)
+		log.Fatalf("[ERROR] On authenticating against Vault: '%s'", err)
 	}
 
 	return handler

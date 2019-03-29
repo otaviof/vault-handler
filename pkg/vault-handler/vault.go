@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	vaultapi "github.com/hashicorp/vault/api"
 )
@@ -40,9 +41,6 @@ func (v *Vault) Read(path, key string) ([]byte, error) {
 	var err error
 
 	log.Printf("[Vault] Reading data from path '%s', looking for key '%s'", path, key)
-	headers := map[string][]string{"X-Vault-Token": []string{v.token}}
-	v.client.SetHeaders(headers)
-	v.client.SetToken(v.token)
 
 	if secret, err = v.client.Logical().Read(path); err != nil {
 		return nil, err
@@ -52,6 +50,31 @@ func (v *Vault) Read(path, key string) ([]byte, error) {
 	}
 
 	return v.extractKey(secret.Data, key)
+}
+
+// Write data to a vault path. Wrapper around Logical Write function in Vault API.
+func (v *Vault) Write(path string, data map[string]interface{}) error {
+	var err error
+
+	log.Printf("[Vault] Writting data on path '%s'", path)
+
+	// wrapping up data for kv-v2
+	if strings.HasPrefix(path, "secret/data") {
+		log.Print("[Vault] Using V2 API style, adding 'data' as key.")
+		data = map[string]interface{}{"data": data}
+	}
+	if _, err = v.client.Logical().Write(path, data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// setHeaders prepare http request headers to inform token.
+func (v *Vault) setHeaders() {
+	headers := map[string][]string{"X-Vault-Token": []string{v.token}}
+	v.client.SetHeaders(headers)
+	v.client.SetToken(v.token)
 }
 
 // AppRoleAuth execute approle authentication.
@@ -71,6 +94,7 @@ func (v *Vault) AppRoleAuth(roleID, secretID string) error {
 	log.Printf("[Vault] Obtained a token via AppRole.")
 	// saving token for next API calls.
 	v.token = secret.Auth.ClientToken
+	v.setHeaders()
 
 	return nil
 }
@@ -78,6 +102,7 @@ func (v *Vault) AppRoleAuth(roleID, secretID string) error {
 // TokenAuth execute token based authentication.
 func (v *Vault) TokenAuth(token string) {
 	v.token = token
+	v.setHeaders()
 }
 
 // NewVault creates a Vault instance, by bootstrapping it's API client.

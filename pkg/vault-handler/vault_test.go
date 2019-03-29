@@ -1,11 +1,14 @@
 package vaulthandler
 
 import (
-	"log"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+)
+
+const (
+	foo = "bar"
 )
 
 var vault *Vault
@@ -23,8 +26,18 @@ func TestVaultAppRoleAuth(t *testing.T) {
 	roleID := os.Getenv("VAULT_HANDLER_VAULT_ROLE_ID")
 	secretID := os.Getenv("VAULT_HANDLER_VAULT_SECRET_ID")
 
-	log.Printf("Role-ID: '%s', Secret-ID: '%s'", roleID, secretID)
+	t.Logf("Role-ID: '%s', Secret-ID: '%s'", roleID, secretID)
+	if roleID == "" || secretID == "" {
+		t.Fatalf("Can't find role-id ('%s'), secret-id ('%s') in the environment", roleID, secretID)
+	}
+
 	err := vault.AppRoleAuth(roleID, secretID)
+
+	assert.Nil(t, err)
+}
+
+func TestVaultWrite(t *testing.T) {
+	err := vault.Write("secret/data/foo/bar/baz", map[string]interface{}{"foo": foo})
 
 	assert.Nil(t, err)
 }
@@ -33,5 +46,5 @@ func TestVaultRead(t *testing.T) {
 	out, err := vault.Read("secret/data/foo/bar/baz", "foo")
 
 	assert.Nil(t, err)
-	log.Printf("out: '%#v'", out)
+	assert.Equal(t, string(out), foo)
 }

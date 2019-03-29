@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
+	"os"
 
 	vaulthandler "github.com/otaviof/vault-handler/pkg/vault-handler"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,19 +21,22 @@ func runDownloadCmd(cmd *cobra.Command, args []string) {
 	var manifest *vaulthandler.Manifest
 	var err error
 
-	log.Printf("runDownloadCmd")
+	logger := log.WithField("cmd", "download")
+	logger.Info("Starting download")
 
 	handler := bootstrap()
 
 	for _, manifestFile := range args {
-		log.Printf("[Download] Handling manifest file: '%s'", manifestFile)
+		logger = logger.WithField("manifest", manifestFile)
+		logger.Info("Handling manifest definitions")
 
 		if manifest, err = vaulthandler.NewManifest(manifestFile); err != nil {
-			log.Fatalf("[ERROR] On parsing manifest: '%s'", err)
+			logger.Fatalf("On parsing manifest: '%s'", err)
+			os.Exit(1)
 		}
-
 		if err = handler.Download(manifest); err != nil {
-			log.Fatalf("[ERROR] During realization of manifest: '%s'", err)
+			logger.Fatalf("On realization of manifest: '%s'", err)
+			os.Exit(1)
 		}
 	}
 }
@@ -45,6 +49,6 @@ func init() {
 	rootCmd.AddCommand(downloadCmd)
 
 	if err := viper.BindPFlags(flags); err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }

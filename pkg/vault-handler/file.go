@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"path"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // File definition on how to write a secret to file-system.
 type File struct {
+	logger     *log.Entry  // logger
 	group      string      // name of the group
 	properties *SecretData // using SecretData as file properties
 	payload    []byte      // data payload
@@ -22,7 +24,7 @@ func (f *File) Zip() error {
 	var buffer bytes.Buffer
 	var err error
 
-	originalPayloadLen := len(f.payload)
+	f.logger.WithField("bytes", len(f.payload)).Info("Zipping file payload")
 	gz := gzip.NewWriter(&buffer)
 
 	if _, err = gz.Write(f.payload); err != nil {
@@ -30,15 +32,13 @@ func (f *File) Zip() error {
 	}
 	if err = gz.Flush(); err != nil {
 		return err
-
 	}
 	if err = gz.Close(); err != nil {
 		return err
 	}
-
-	log.Printf("[File] Zipping payload, before and after: '%d'/'%d' bytes ",
-		originalPayloadLen, len(f.payload))
 	f.payload = buffer.Bytes()
+	f.logger.WithField("bytes", len(f.payload)).Info("Zipped file payload")
+
 	return nil
 }
 
@@ -48,7 +48,8 @@ func (f *File) Unzip() error {
 	var bufferOut bytes.Buffer
 	var err error
 
-	originalPayloadLen := len(f.payload)
+	f.logger.WithField("bytes", len(f.payload)).Info("Unzipping file payload")
+
 	bufferIn := bytes.NewBuffer(f.payload)
 	if reader, err = gzip.NewReader(bufferIn); err != nil {
 		return err
@@ -57,9 +58,9 @@ func (f *File) Unzip() error {
 		return err
 	}
 
-	log.Printf("[File] Unzipping payload, before and after: '%d'/'%d' bytes ",
-		originalPayloadLen, len(f.payload))
 	f.payload = bufferOut.Bytes()
+	f.logger.WithField("bytes", len(f.payload)).Info("Unzipped file payload")
+
 	return nil
 }
 
@@ -74,14 +75,16 @@ func (f *File) Read(baseDir string) error {
 	if f.payload, err = ioutil.ReadFile(fullPath); err != nil {
 		return err
 	}
-	log.Printf("[File] Reading '%d' bytes from '%s'", len(f.payload), fullPath)
+	f.logger.WithFields(log.Fields{"path": fullPath, "bytes": len(f.payload)}).
+		Info("Reading file content")
 
 	return nil
 }
 
 // Write contents to file-system.
 func (f *File) Write(baseDir string) error {
-	log.Printf("[File] Writting '%d' bytes on '%s'", len(f.payload), f.fileName())
+	f.logger.WithFields(log.Fields{"name": f.fileName(), "bytes": len(f.payload)}).
+		Info("Reading file content")
 	return ioutil.WriteFile(f.FilePath(baseDir), f.payload, 0600)
 }
 
@@ -107,5 +110,14 @@ func (f *File) Payload() []byte {
 
 // NewFile instance.
 func NewFile(group string, properties *SecretData, payload []byte) *File {
-	return &File{group: group, properties: properties, payload: payload}
+	return &File{
+		logger: log.WithFields(log.Fields{
+			"type":      "File",
+			"name":      properties.Name,
+			"extension": properties.Extension,
+		}),
+		group:      group,
+		properties: properties,
+		payload:    payload,
+	}
 }

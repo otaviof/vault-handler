@@ -3,16 +3,17 @@ package vaulthandler
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	vaultapi "github.com/hashicorp/vault/api"
+	log "github.com/sirupsen/logrus"
 )
 
 // Vault represent Vault server and the actions it can receive.
 type Vault struct {
-	client *vaultapi.Client
-	token  string
+	logger *log.Entry       // logger
+	client *vaultapi.Client // vault api client
+	token  string           // user token, or obtianed with AppRole
 }
 
 // AppRoleAuth execute approle authentication.
@@ -20,7 +21,7 @@ func (v *Vault) AppRoleAuth(roleID, secretID string) error {
 	var secret *vaultapi.Secret
 	var err error
 
-	log.Printf("[Vault] Starting AppRole authentication.")
+	v.logger.Info("Starting AppRole authentication")
 	authData := map[string]interface{}{"role_id": roleID, "secret_id": secretID}
 	if secret, err = v.client.Logical().Write("auth/approle/login", authData); err != nil {
 		return err
@@ -29,7 +30,7 @@ func (v *Vault) AppRoleAuth(roleID, secretID string) error {
 		return errors.New("no authentication data is returned from vault")
 	}
 
-	log.Printf("[Vault] Obtained a token via AppRole.")
+	v.logger.Info("Obtained a token via AppRole.")
 	// saving token for next API calls.
 	v.token = secret.Auth.ClientToken
 	v.setHeaders()
@@ -48,7 +49,8 @@ func (v *Vault) Read(path, key string) ([]byte, error) {
 	var secret *vaultapi.Secret
 	var err error
 
-	log.Printf("[Vault] Reading data from path '%s', looking for key '%s'", path, key)
+	v.logger.WithFields(log.Fields{"path": path, "key": key}).
+		Infof("Reading data from Vault path")
 
 	if secret, err = v.client.Logical().Read(path); err != nil {
 		return nil, err
@@ -64,11 +66,11 @@ func (v *Vault) Read(path, key string) ([]byte, error) {
 func (v *Vault) Write(path string, data map[string]interface{}) error {
 	var err error
 
-	log.Printf("[Vault] Writting data on path '%s'", path)
+	v.logger.WithField("path", path).Infof("Writting data to Vault path")
 
 	// wrapping up data for kv-v2
 	if strings.HasPrefix(path, "secret/data") {
-		log.Print("[Vault] Using V2 API style, adding 'data' as key.")
+		v.logger.Info("Using V2 API style, adding 'data' as key")
 		data = map[string]interface{}{"data": data}
 	}
 	if _, err = v.client.Logical().Write(path, data); err != nil {
@@ -92,7 +94,7 @@ func (v *Vault) extractKey(payload map[string]interface{}, key string) ([]byte, 
 	var exists bool
 
 	if _, exists = payload["data"]; exists {
-		log.Print("[Vault] Using V2 API style, extracting 'data' from payload.")
+		v.logger.Info("Using V2 API style, extracting 'data' as key")
 		payload = payload["data"].(map[string]interface{})
 	}
 
@@ -101,7 +103,8 @@ func (v *Vault) extractKey(payload map[string]interface{}, key string) ([]byte, 
 	}
 
 	dataAsBytes := []byte(data)
-	log.Printf("[Vault] Obtained '%d' bytes from key '%s'", len(dataAsBytes), key)
+	v.logger.WithFields(log.Fields{"key": key, "bytes": len(dataAsBytes)}).
+		Info("Read key from Vault")
 	return dataAsBytes, nil
 }
 
@@ -109,11 +112,10 @@ func (v *Vault) extractKey(payload map[string]interface{}, key string) ([]byte, 
 func NewVault(addr string) (*Vault, error) {
 	var err error
 
-	log.Printf("[Vault] Instantiating Vault API client on address '%s'", addr)
-	vault := &Vault{}
-	config := &vaultapi.Config{Address: addr}
+	vault := &Vault{logger: log.WithFields(log.Fields{"type": "Vault"})}
+	vault.logger.WithField("addr", addr).Info("Instantiating Vault API client")
 
-	if vault.client, err = vaultapi.NewClient(config); err != nil {
+	if vault.client, err = vaultapi.NewClient(&vaultapi.Config{Address: addr}); err != nil {
 		return nil, err
 	}
 

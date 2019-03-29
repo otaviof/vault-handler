@@ -5,6 +5,7 @@ import (
 
 	vaulthandler "github.com/otaviof/vault-handler/pkg/vault-handler"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var downloadCmd = &cobra.Command{
@@ -19,10 +20,12 @@ func runDownloadCmd(cmd *cobra.Command, args []string) {
 	var manifest *vaulthandler.Manifest
 	var err error
 
+	log.Printf("runDownloadCmd")
+
 	handler := bootstrap()
 
 	for _, manifestFile := range args {
-		log.Printf("Handling manifest file: '%s'", manifestFile)
+		log.Printf("[Download] Handling manifest file: '%s'", manifestFile)
 
 		if manifest, err = vaulthandler.NewManifest(manifestFile); err != nil {
 			log.Fatalf("[ERROR] On parsing manifest: '%s'", err)
@@ -40,4 +43,8 @@ func init() {
 	flags.String("output-dir", ".", "Output directory.")
 
 	rootCmd.AddCommand(downloadCmd)
+
+	if err := viper.BindPFlags(flags); err != nil {
+		panic(err)
+	}
 }

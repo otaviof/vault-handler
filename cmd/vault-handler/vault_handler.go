@@ -1,10 +1,11 @@
 package main
 
 import (
-	"log"
+	"os"
 	"strings"
 
 	vaulthandler "github.com/otaviof/vault-handler/pkg/vault-handler"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -31,8 +32,14 @@ func configFromEnv() *vaulthandler.Config {
 
 // bootstrap creates connection with vault, by instantiating Handler.
 func bootstrap() *vaulthandler.Handler {
+	var level log.Level
 	var handler *vaulthandler.Handler
 	var err error
+
+	if level, err = log.ParseLevel(viper.GetString("log-level")); err != nil {
+		log.Fatalf("[ERROR] On parsing log-level: '%s'", err)
+	}
+	log.SetLevel(level)
 
 	config := configFromEnv()
 	if err = config.Validate(); err != nil {
@@ -54,6 +61,8 @@ func bootstrap() *vaulthandler.Handler {
 func init() {
 	var err error
 
+	log.SetOutput(os.Stdout)
+
 	flags := rootCmd.PersistentFlags()
 
 	// setting up rules for environment variables
@@ -67,6 +76,7 @@ func init() {
 	flags.String("vault-role-id", "", "Vault AppRole role-id")
 	flags.String("vault-secret-id", "", "Vault AppRole secret-id")
 	flags.Bool("dry-run", false, "dry-run mode")
+	flags.String("log-level", "debug", "dry-run mode")
 
 	if err = viper.BindPFlags(flags); err != nil {
 		log.Fatal(err)

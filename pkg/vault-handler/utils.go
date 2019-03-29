@@ -2,8 +2,9 @@ package vaulthandler
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // fileExists Check if path exists, boolean return.
@@ -16,15 +17,17 @@ func fileExists(path string) bool {
 
 // readFile Wrap up a ioutil call, using fatal log in case of error.
 func readFile(path string) []byte {
-	log.Printf("[Utils] Reading file: '%s'", path)
+	var fileBytes []byte
+	var err error
+
+	logger := log.WithField("path", path)
+	logger.Infof("Reading file bytes")
 
 	if !fileExists(path) {
-		log.Fatalf("Can't find file: '%s'", path)
+		logger.Fatal("Can't find file")
 	}
-
-	fileBytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		log.Fatal(err)
+	if fileBytes, err = ioutil.ReadFile(path); err != nil {
+		logger.Fatalf("Error on read file: '%s'", err)
 	}
 	return fileBytes
 }

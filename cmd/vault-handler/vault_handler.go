@@ -45,11 +45,9 @@ func bootstrap() *vaulthandler.Handler {
 	if err = config.Validate(); err != nil {
 		log.Fatalf("[ERROR] On validating parameters: '%s'", err)
 	}
-
 	if handler, err = vaulthandler.NewHandler(config); err != nil {
 		log.Fatalf("[ERROR] On instantiating Vault-API: '%s'", err)
 	}
-
 	if err = handler.Authenticate(); err != nil {
 		log.Fatalf("[ERROR] On authenticating against Vault: '%s'", err)
 	}

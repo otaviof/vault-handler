@@ -119,8 +119,8 @@ func (h *Handler) Upload(manifest *Manifest) error {
 // persist a slice of bytes to file-system.
 func (h *Handler) persist(file *File) error {
 	if h.config.DryRun {
-		log.Printf("[DRY-RUN] File '%s' is not written to file-system!",
-			file.FilePath(h.config.OutputDir))
+		log.WithField("path", file.FilePath(h.config.OutputDir)).
+			Info("[DRY-RUN] File is not written to file-system!")
 	} else {
 		if err := file.Write(h.config.OutputDir); err != nil {
 			return err
@@ -134,12 +134,15 @@ func (h *Handler) dispense(file *File, vaultPath string) error {
 	var data = make(map[string]interface{})
 	var err error
 
+	logger := log.WithFields(log.Fields{"name": file.Name(), "vaultPath": vaultPath})
+
 	if h.config.DryRun {
-		log.Printf("[DRY-RUN] File '%s' is not uploaded to Vault path '%s'", file.Name(), vaultPath)
+		logger.Infof("[DRY-RUN] File is not uploaded to Vault!")
 		return nil
 	}
 
-	data[file.Name()] = file.Payload()
+	data[file.Name()] = string(file.Payload())
+	logger.Tracef("data: '%#v'", data)
 	if err = h.vault.Write(vaultPath, data); err != nil {
 		return err
 	}

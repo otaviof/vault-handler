@@ -13,7 +13,7 @@ import (
 type Vault struct {
 	logger *log.Entry       // logger
 	client *vaultapi.Client // vault api client
-	token  string           // user token, or obtianed with AppRole
+	token  string           // user token, or obtained with AppRole
 }
 
 // AppRoleAuth execute approle authentication.
@@ -97,15 +97,14 @@ func (v *Vault) extractKey(payload map[string]interface{}, key string) ([]byte, 
 		v.logger.Info("Using V2 API style, extracting 'data' as key")
 		payload = payload["data"].(map[string]interface{})
 	}
-
 	if data, exists = payload[key].(string); !exists {
 		return nil, fmt.Errorf("cannot extract key '%s' from vault payload", key)
 	}
 
-	dataAsBytes := []byte(data)
-	v.logger.WithFields(log.Fields{"key": key, "bytes": len(dataAsBytes)}).
-		Info("Read key from Vault")
-	return dataAsBytes, nil
+	logger := v.logger.WithField("key", key)
+	logger.Info("Read key from Vault")
+	logger.Tracef("data '%s'", data)
+	return []byte(data), nil
 }
 
 // NewVault creates a Vault instance, by bootstrapping it's API client.

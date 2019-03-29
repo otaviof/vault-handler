@@ -11,31 +11,6 @@ type Handler struct {
 	vault  *Vault  // vault api instance
 }
 
-// persist a slice of bytes to file-system.
-func (h *Handler) persist(group string, data *SecretData, payload []byte) error {
-	var err error
-
-	file := NewFile(group, data, payload)
-
-	if data.Unzip {
-		log.Print("[Handler] Extracting ZIP payload.")
-		if err = file.Unzip(); err != nil {
-			return err
-		}
-	}
-
-	if h.config.DryRun {
-		log.Printf("[DRY-RUN] File '%s' is not written to file-system!",
-			file.FilePath(h.config.OutputDir))
-	} else {
-		if err = file.Write(h.config.OutputDir); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // Authenticate against vault either via token directly or via AppRole, must be invoked before other
 // actions using the API.
 func (h *Handler) Authenticate() error {
@@ -54,14 +29,6 @@ func (h *Handler) Authenticate() error {
 	return nil
 }
 
-// composeVaultPath based in the current SecretData.
-func (h *Handler) composeVaultPath(secrets Secrets, data SecretData) string {
-	if !data.NameAsSubPath {
-		return secrets.Path
-	}
-	return path.Join(secrets.Path, data.Name)
-}
-
 // Download files from vault based on manifest.
 func (h *Handler) Download(manifest *Manifest) error {
 	var err error
@@ -71,20 +38,28 @@ func (h *Handler) Download(manifest *Manifest) error {
 		log.Printf("[Handler/Download] [%s] Vault path '%s'", group, secrets.Path)
 
 		for _, data := range secrets.Data {
+			var payload []byte
+
 			log.Printf("[Handler/Download] [%s] Reading data from Vault '%s.%s' (unzip: %v)",
 				group, data.Name, data.Extension, data.Unzip)
 
 			vaultPath := h.composeVaultPath(secrets, data)
-			log.Printf("[Handler/Download] [%s] '%s' path in Vault: '%s'", data.Name, group, vaultPath)
+			log.Printf("[Handler/Download] [%s] '%s' path in Vault: '%s'",
+				data.Name, group, vaultPath)
 
-			// loading secret from vault
-			payload := []byte{}
 			if payload, err = h.vault.Read(vaultPath, data.Name); err != nil {
 				return err
 			}
 
-			// saving data to disk
-			if err = h.persist(group, &data, payload); err != nil {
+			file := NewFile(group, &data, payload)
+
+			if data.Unzip {
+				if err = file.Unzip(); err != nil {
+					return err
+				}
+			}
+
+			if err = h.persist(file); err != nil {
 				return err
 			}
 		}
@@ -128,6 +103,20 @@ func (h *Handler) Upload(manifest *Manifest) error {
 	return nil
 }
 
+// persist a slice of bytes to file-system.
+func (h *Handler) persist(file *File) error {
+	if h.config.DryRun {
+		log.Printf("[DRY-RUN] File '%s' is not written to file-system!",
+			file.FilePath(h.config.OutputDir))
+	} else {
+		if err := file.Write(h.config.OutputDir); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// dispense a file payload to Vault server.
 func (h *Handler) dispense(file *File, vaultPath string) error {
 	var data = make(map[string]interface{})
 	var err error
@@ -143,6 +132,14 @@ func (h *Handler) dispense(file *File, vaultPath string) error {
 	}
 
 	return nil
+}
+
+// composeVaultPath based in the current SecretData.
+func (h *Handler) composeVaultPath(secrets Secrets, data SecretData) string {
+	if !data.NameAsSubPath {
+		return secrets.Path
+	}
+	return path.Join(secrets.Path, data.Name)
 }
 
 // NewHandler instantiates a new application.

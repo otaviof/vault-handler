@@ -22,6 +22,7 @@ func (f *File) Zip() error {
 	var buffer bytes.Buffer
 	var err error
 
+	originalPayloadLen := len(f.payload)
 	gz := gzip.NewWriter(&buffer)
 
 	if _, err = gz.Write(f.payload); err != nil {
@@ -35,6 +36,8 @@ func (f *File) Zip() error {
 		return err
 	}
 
+	log.Printf("[File] Zipping payload, before and after: '%d'/'%d' bytes ",
+		originalPayloadLen, len(f.payload))
 	f.payload = buffer.Bytes()
 	return nil
 }
@@ -45,6 +48,7 @@ func (f *File) Unzip() error {
 	var bufferOut bytes.Buffer
 	var err error
 
+	originalPayloadLen := len(f.payload)
 	bufferIn := bytes.NewBuffer(f.payload)
 	if reader, err = gzip.NewReader(bufferIn); err != nil {
 		return err
@@ -53,6 +57,8 @@ func (f *File) Unzip() error {
 		return err
 	}
 
+	log.Printf("[File] Unzipping payload, before and after: '%d'/'%d' bytes ",
+		originalPayloadLen, len(f.payload))
 	f.payload = bufferOut.Bytes()
 	return nil
 }
@@ -75,7 +81,13 @@ func (f *File) Read(baseDir string) error {
 
 // Write contents to file-system.
 func (f *File) Write(baseDir string) error {
+	log.Printf("[File] Writting '%d' bytes on '%s'", len(f.payload), f.fileName())
 	return ioutil.WriteFile(f.FilePath(baseDir), f.payload, 0600)
+}
+
+// Name exposes the file name from properties.
+func (f *File) Name() string {
+	return f.properties.Name
 }
 
 // fileName compose file name based on group and SecretData settings.

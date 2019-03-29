@@ -1,7 +1,6 @@
 package vaulthandler
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -9,6 +8,7 @@ import (
 type Config struct {
 	DryRun        bool   // dry-run flag
 	OutputDir     string // output directory path
+	InputDir      string // input directory, when uploading
 	VaultAddr     string // vault api endpoint
 	VaultToken    string // vault token
 	VaultRoleID   string // vault approle role-id
@@ -18,18 +18,21 @@ type Config struct {
 // Validate configuration object.
 func (c *Config) Validate() error {
 	if c.VaultAddr == "" {
-		return errors.New("vault-addr is not informed")
+		return fmt.Errorf("vault-addr is not informed")
 	}
 	if c.VaultToken == "" && c.VaultRoleID == "" && c.VaultSecretID == "" {
-		return errors.New("inform vault-token, or vault-role-id and secret-id")
+		return fmt.Errorf("inform vault-token, or vault-role-id and secret-id")
 	}
 	if c.VaultToken != "" && (c.VaultRoleID != "" || c.VaultSecretID != "") {
-		return errors.New("vault-token can't be used in combination with role-id or secret-id")
+		return fmt.Errorf("vault-token can't be used in combination with role-id or secret-id")
 	}
-	if c.OutputDir == "" {
-		return errors.New("output-dir is not informed")
+	if c.InputDir == "" && c.OutputDir == "" {
+		return fmt.Errorf("both input-dir and output-dir are empty")
 	}
-	if !isDir(c.OutputDir) {
+	if c.InputDir != "" && !isDir(c.InputDir) {
+		return fmt.Errorf("input-dir '%s' is not found", c.InputDir)
+	}
+	if c.OutputDir != "" && !isDir(c.OutputDir) {
 		return fmt.Errorf("output-dir '%s' is not found", c.OutputDir)
 	}
 

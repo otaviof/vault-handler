@@ -15,24 +15,32 @@ type Vault struct {
 	token  string
 }
 
-// extractKey coming from Read method, where the user can choose one key to be taken out of the data
-// read from Vault.
-func (v *Vault) extractKey(payload map[string]interface{}, key string) ([]byte, error) {
-	var data string
-	var exists bool
+// AppRoleAuth execute approle authentication.
+func (v *Vault) AppRoleAuth(roleID, secretID string) error {
+	var secret *vaultapi.Secret
+	var err error
 
-	if _, exists = payload["data"]; exists {
-		log.Print("[Vault] Using V2 API style, extracting 'data' from payload.")
-		payload = payload["data"].(map[string]interface{})
+	log.Printf("[Vault] Starting AppRole authentication.")
+	authData := map[string]interface{}{"role_id": roleID, "secret_id": secretID}
+	if secret, err = v.client.Logical().Write("auth/approle/login", authData); err != nil {
+		return err
+	}
+	if secret.Auth == nil || secret.Auth.ClientToken == "" {
+		return errors.New("no authentication data is returned from vault")
 	}
 
-	if data, exists = payload[key].(string); !exists {
-		return nil, fmt.Errorf("cannot extract key '%s' from vault payload", key)
-	}
+	log.Printf("[Vault] Obtained a token via AppRole.")
+	// saving token for next API calls.
+	v.token = secret.Auth.ClientToken
+	v.setHeaders()
 
-	dataAsBytes := []byte(data)
-	log.Printf("Obtained '%d' bytes from key '%s'", len(dataAsBytes), key)
-	return dataAsBytes, nil
+	return nil
+}
+
+// TokenAuth execute token based authentication.
+func (v *Vault) TokenAuth(token string) {
+	v.token = token
+	v.setHeaders()
 }
 
 // Read data from a given vault path and key name, and returning a slice of bytes with payload.
@@ -77,32 +85,24 @@ func (v *Vault) setHeaders() {
 	v.client.SetToken(v.token)
 }
 
-// AppRoleAuth execute approle authentication.
-func (v *Vault) AppRoleAuth(roleID, secretID string) error {
-	var secret *vaultapi.Secret
-	var err error
+// extractKey coming from Read method, where the user can choose one key to be taken out of the data
+// read from Vault.
+func (v *Vault) extractKey(payload map[string]interface{}, key string) ([]byte, error) {
+	var data string
+	var exists bool
 
-	log.Printf("[Vault] Starting AppRole authentication.")
-	authData := map[string]interface{}{"role_id": roleID, "secret_id": secretID}
-	if secret, err = v.client.Logical().Write("auth/approle/login", authData); err != nil {
-		return err
-	}
-	if secret.Auth == nil || secret.Auth.ClientToken == "" {
-		return errors.New("no authentication data is returned from vault")
+	if _, exists = payload["data"]; exists {
+		log.Print("[Vault] Using V2 API style, extracting 'data' from payload.")
+		payload = payload["data"].(map[string]interface{})
 	}
 
-	log.Printf("[Vault] Obtained a token via AppRole.")
-	// saving token for next API calls.
-	v.token = secret.Auth.ClientToken
-	v.setHeaders()
+	if data, exists = payload[key].(string); !exists {
+		return nil, fmt.Errorf("cannot extract key '%s' from vault payload", key)
+	}
 
-	return nil
-}
-
-// TokenAuth execute token based authentication.
-func (v *Vault) TokenAuth(token string) {
-	v.token = token
-	v.setHeaders()
+	dataAsBytes := []byte(data)
+	log.Printf("[Vault] Obtained '%d' bytes from key '%s'", len(dataAsBytes), key)
+	return dataAsBytes, nil
 }
 
 // NewVault creates a Vault instance, by bootstrapping it's API client.

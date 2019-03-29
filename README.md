@@ -1,6 +1,17 @@
 <p align="center">
     <img src ="./assets/logo/vault-handler.png"/>
 </p>
+<p align="center">
+    <a alt="GoReport" href="https://goreportcard.com/report/github.com/otaviof/vault-handler">
+        <img src="https://goreportcard.com/badge/github.com/otaviof/vault-handler">
+    </a>
+    <a alt="Code Coverage" href="https://codecov.io/gh/otaviof/vault-handler">
+        <img src="https://codecov.io/gh/otaviof/vault-handler/branch/master/graph/badge.svg">
+    </a>
+    <a alt="Build Status" href="https://travis-ci.com/otaviof/vault-handler">
+        <img src="https://travis-ci.com/otaviof/vault-handler.svg?branch=master">
+    </a>
+</p>
 
 # `vault-handler` (WIP)
 

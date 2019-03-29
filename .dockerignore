@@ -3,6 +3,8 @@
 .git*
 .goreleaser*
 .vscode
+.ci
+.cover*
 README.md
 build
 test

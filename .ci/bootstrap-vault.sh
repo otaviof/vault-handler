@@ -8,12 +8,27 @@ function die () {
     exit 1
 }
 
-function enable_secrets_kv() {
+function wait_for_vault () {
+    max_attemtps=10
+    attempts=0
+
+    echo "Waiting for Vault at '${VAULT_ADDR}'..."
+    until curl --fail ${VAULT_ADDR} > /dev/null 2>&1 || [ $attempts -eq $max_attemtps ] ; do
+        echo "# Failed to reach Vault at '${VAULT_ADDR}' (${attempts}/${max_attemtps})"
+        sleep $(( attempts++ ))
+    done
+
+    if [ $attempts -eq $max_attemtps ]; then
+        die "Can't reach Vault at '${VAULT_ADDR}', timeout!"
+    fi
+}
+
+function enable_secrets_kv () {
     vault secrets enable -version=2 kv || \
         die "Can't enable secrets kv!"
 }
 
-function enable_approle() {
+function enable_approle () {
     if ! vault auth list |grep -q approle ; then
         vault auth enable approle || \
             die "Can't enable approle!"
@@ -25,7 +40,7 @@ function write_policy() {
         die "Can't apply test policy!"
 }
 
-function create_approle_app() {
+function create_approle_app () {
     vault write auth/approle/role/test-app \
         policies=test-app \
         secret_id_num_uses=0 \
@@ -36,20 +51,20 @@ function create_approle_app() {
             die "Can't create test-app approle!"
 }
 
-function get_role_id() {
+function get_role_id () {
     vault read auth/approle/role/test-app/role-id \
         |grep role_id \
         |awk '{print $2}'
 }
 
-function get_secret_id() {
+function get_secret_id () {
     vault write -f auth/approle/role/test-app/secret-id \
         |grep secret_id \
         |grep -v accessor \
         |awk '{print $2}'
 }
 
-function register_app() {
+function register_app () {
     local role_id=$1
     local secret_id=$2
 
@@ -63,6 +78,7 @@ function register_app() {
 # Main
 #
 
+wait_for_vault
 enable_secrets_kv
 enable_approle
 write_policy

@@ -1,11 +1,20 @@
+# application name
 APP = vault-handler
+# build directory
 BUILD_DIR ?= build
+# docker image tag
 DOCKER_IMAGE ?= "otaviof/$(APP)"
+# directory containing end-to-end tests
+E2E_TEST_DIR ?= test/e2e
+# project version, used as docker tag
 VERSION ?= $(shell cat ./version)
 
 .PHONY: default bootstrap build clean test
 
 default: build
+
+dep:
+	go get -u github.com/golang/dep/cmd/dep
 
 bootstrap:
 	dep ensure -v -vendor-only
@@ -23,18 +32,20 @@ clean-vendor:
 	rm -rf ./vendor > /dev/null
 
 test:
-	go test -cover -v pkg/$(APP)/*
+	go test -race -coverprofile=coverage.txt -covermode=atomic -cover -v pkg/$(APP)/*
 
 snapshot:
 	goreleaser --rm-dist --snapshot
 
-release: release-go release-docker
-	@echo "# Uploaded vault-handler v'$(VERSION)'!"
-
-release-go:
+release:
 	git tag $(VERSION)
 	git push origin $(VERSION)
 	goreleaser --rm-dist
 
-release-docker: build-docker
-	docker push $(DOCKER_IMAGE):$(VERSION)
+integration:
+	go test -v $(E2E_TEST_DIR)/*
+
+codecov:
+	mkdir .ci || true
+	curl -s -o .ci/codecov.sh https://codecov.io/bash
+	bash .ci/codecov.sh -t $(CODECOV_TOKEN)

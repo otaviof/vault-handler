@@ -1,5 +1,7 @@
 build/
+coverage*
 vendor*
+.ci/codecov*
 .data
 .env
 .vscode

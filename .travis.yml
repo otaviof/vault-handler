@@ -16,6 +16,6 @@ script:
   - make bootstrap
   - make
   - make test
-  # - make integration
+  - make integration
 after_success:
   - make codecov

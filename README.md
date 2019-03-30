@@ -26,6 +26,23 @@ create files accordingly.
 go get -u github.com/otaviof/vault-handler/cmd/vault-handler
 ```
 
+### Docker Images
+
+Docker images can be bound at [Docker-Hub](https://hub.docker.com/r/otaviof/vault-handler). And for
+example, to show the command line help use
+
+``` bash
+docker run --interactive --tty otaviof/vault-handler:latest --help
+```
+
+Downloading data from Vault would be, for instance:
+
+```
+docker run otaviof/vault-handler:latest download
+```
+
+Consider exporting configuration as environment variables to change the behavior of `vault-handler`.
+
 ## HashiCorp Vault
 
 This application is a client of Vault. You can choose either

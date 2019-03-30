@@ -10,10 +10,14 @@ import (
 )
 
 var downloadCmd = &cobra.Command{
-	Use:   "download",
+	Use:   "download [manifest-files]",
 	Run:   runDownloadCmd,
-	Short: "",
-	Long:  ``,
+	Short: "Realize manifest downloading secrets from Vault.",
+	Long: ` # vault-handler download
+
+Based on informed manifest, it download the secrets from Vault and rename the files accordingly. The
+output location is informed by "--output-dir" parameter.
+`,
 }
 
 // runDownloadCmd execute the download of secrets from Vault.

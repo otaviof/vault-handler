@@ -14,6 +14,6 @@ secrets:
         # file extension
         extension: txt # when using "file" as type
         # unzip payload
-        unzip: false # only when having "file" as type
+        zip: false # only when having "file" as type
         # use key-name as part of vault path
         nameAsSubPath: false

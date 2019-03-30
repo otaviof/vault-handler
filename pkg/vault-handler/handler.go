@@ -49,7 +49,7 @@ func (h *Handler) Upload(manifest *Manifest) error {
 			logger = logger.WithFields(log.Fields{
 				"name":      data.Name,
 				"extension": data.Extension,
-				"unzip":     data.Unzip,
+				"zip":       data.Zip,
 			})
 			logger.Info("Handling file")
 
@@ -60,7 +60,7 @@ func (h *Handler) Upload(manifest *Manifest) error {
 				return err
 			}
 
-			if data.Unzip {
+			if data.Zip {
 				if err = file.Zip(); err != nil {
 					logger.Error("error on zipping payload", err)
 					return err
@@ -92,7 +92,7 @@ func (h *Handler) Download(manifest *Manifest) error {
 			logger.WithFields(log.Fields{
 				"name":      data.Name,
 				"extension": data.Extension,
-				"unzip":     data.Unzip,
+				"zip":       data.Zip,
 				"vaultPath": vaultPath,
 			}).Info("Reading data from Vault")
 
@@ -101,7 +101,7 @@ func (h *Handler) Download(manifest *Manifest) error {
 			}
 			file := NewFile(group, &data, payload)
 
-			if data.Unzip {
+			if data.Zip {
 				if err = file.Unzip(); err != nil {
 					return err
 				}

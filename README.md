@@ -74,7 +74,7 @@ secrets:
     data:
       - name: foo
         extension: txt
-        unzip: false
+        zip: false
         nameAsSubPath: false
 ```
 
@@ -86,7 +86,7 @@ Description of the options used in manifest:
   `/secret/data`, while in V1 API it would be directly `/secret`;
 - `name.data.name`: file name;
 - `name.data.extension`: file extension;
-- `name.data.unzip`: file contents is GZIP, needs to be decompressed;
+- `name.data.zip`: file contents is GZIP, needs to be compressed/decompressed;
 - `name.data.nameAsSubPath`: employ name as final part of the Vault path `name.path`;
 
 ### File Naming Convention

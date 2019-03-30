@@ -19,7 +19,7 @@ type Secrets struct {
 type SecretData struct {
 	Name          string `yaml:"name"`                    // file name
 	Extension     string `yaml:"extension"`               // file extension
-	Unzip         bool   `yaml:"unzip,omitempty"`         // unzip data after download
+	Zip           bool   `yaml:"zip,omitempty"`           // deal with zipped payload
 	NameAsSubPath bool   `yaml:"nameAsSubPath,omitempty"` // employ name as part of the path
 }
 

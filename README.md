@@ -1,5 +1,5 @@
 <p align="center">
-    <img src ="./assets/logo/vault-handler.png"/>
+    <img src ="https://raw.githubusercontent.com/otaviof/vault-handler/master/assets/logo/vault-handler.png"/>
 </p>
 <p align="center">
     <a alt="GoReport" href="https://goreportcard.com/report/github.com/otaviof/vault-handler">

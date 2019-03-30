@@ -31,45 +31,6 @@ func (h *Handler) Authenticate() error {
 	return nil
 }
 
-// Download files from vault based on manifest.
-func (h *Handler) Download(manifest *Manifest) error {
-	var err error
-
-	for group, secrets := range manifest.Secrets {
-		logger := h.logger.WithFields(log.Fields{"group": group, "vaultPath": secrets.Path})
-		logger.Info("Handling secrets")
-
-		for _, data := range secrets.Data {
-			var vaultPath = h.composeVaultPath(secrets, data)
-			var payload []byte
-
-			logger.WithFields(log.Fields{
-				"name":      data.Name,
-				"extension": data.Extension,
-				"unzip":     data.Unzip,
-				"vaultPath": vaultPath,
-			}).Info("Reading data from Vault")
-
-			if payload, err = h.vault.Read(vaultPath, data.Name); err != nil {
-				return err
-			}
-			file := NewFile(group, &data, payload)
-
-			if data.Unzip {
-				if err = file.Unzip(); err != nil {
-					return err
-				}
-			}
-
-			if err = h.persist(file); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 // Upload files to Vault, accordingly to the manifest.
 func (h *Handler) Upload(manifest *Manifest) error {
 	var err error
@@ -108,6 +69,45 @@ func (h *Handler) Upload(manifest *Manifest) error {
 
 			if err = h.dispense(file, h.composeVaultPath(secrets, data)); err != nil {
 				logger.Error("error on writting data to vault", err)
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// Download files from vault based on manifest.
+func (h *Handler) Download(manifest *Manifest) error {
+	var err error
+
+	for group, secrets := range manifest.Secrets {
+		logger := h.logger.WithFields(log.Fields{"group": group, "vaultPath": secrets.Path})
+		logger.Info("Handling secrets")
+
+		for _, data := range secrets.Data {
+			var vaultPath = h.composeVaultPath(secrets, data)
+			var payload []byte
+
+			logger.WithFields(log.Fields{
+				"name":      data.Name,
+				"extension": data.Extension,
+				"unzip":     data.Unzip,
+				"vaultPath": vaultPath,
+			}).Info("Reading data from Vault")
+
+			if payload, err = h.vault.Read(vaultPath, data.Name); err != nil {
+				return err
+			}
+			file := NewFile(group, &data, payload)
+
+			if data.Unzip {
+				if err = file.Unzip(); err != nil {
+					return err
+				}
+			}
+
+			if err = h.persist(file); err != nil {
 				return err
 			}
 		}

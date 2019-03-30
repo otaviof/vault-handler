@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,6 +31,8 @@ var handlerManifest = &Manifest{
 }
 
 func TestHandlerAuthenticateToken(t *testing.T) {
+	log.SetLevel(log.TraceLevel)
+
 	config := &Config{
 		VaultAddr:  vaultAddr,
 		VaultToken: vaultRootToken,
@@ -93,8 +96,8 @@ func TestHandlerDownload(t *testing.T) {
 	var err error
 
 	zippedPath := fmt.Sprintf("%s/%s.zipped.txt", outputDir, groupName)
-	plainPath := fmt.Sprintf("%s/%s.plain.txt", outputDir, groupName)
 	_ = os.Remove(zippedPath)
+	plainPath := fmt.Sprintf("%s/%s.plain.txt", outputDir, groupName)
 	_ = os.Remove(plainPath)
 
 	err = handler.Download(handlerManifest)
@@ -124,19 +127,19 @@ func TestHandlerPersist(t *testing.T) {
 func TestHandlerDispense(t *testing.T) {
 	var err error
 
-	file := NewFile("dispense", &SecretData{Name: "name", Extension: "ext"}, []byte("dispense"))
-	err = handler.dispense(file, "secret/data/test/handler/dispense")
+	err = handler.dispense("secret/data/test/handler/dispense",
+		map[string]interface{}{"name": []byte("dispense")})
 
 	assert.Nil(t, err)
 }
 
 func TestHandlerComposeVaultPath(t *testing.T) {
-	path := handler.composeVaultPath(handlerManifest.Secrets[groupName],
-		SecretData{Name: "name", Extension: "ext"})
+	path := handler.composeVaultPath(SecretData{Name: "name", Extension: "ext"},
+		handlerManifest.Secrets[groupName].Path)
 	assert.Equal(t, handlerManifest.Secrets[groupName].Path, path)
 
 	data := SecretData{Name: "name", Extension: "ext", NameAsSubPath: true}
-	path = handler.composeVaultPath(handlerManifest.Secrets[groupName], data)
+	path = handler.composeVaultPath(data, handlerManifest.Secrets[groupName].Path)
 	expect := fmt.Sprintf("%s/%s", handlerManifest.Secrets[groupName].Path, data.Name)
 	assert.Equal(t, expect, path)
 }

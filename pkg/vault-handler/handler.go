@@ -35,42 +35,41 @@ func (h *Handler) Authenticate() error {
 func (h *Handler) Upload(manifest *Manifest) error {
 	var err error
 
-	h.logger.Info("Uploading secrets...")
-	for group, secrets := range manifest.Secrets {
-		logger := h.logger.WithFields(log.Fields{
-			"action":    "upload",
-			"inputDir":  h.config.InputDir,
-			"group":     group,
-			"vaultPath": secrets.Path,
-		})
-		logger.Info("Handling secrets for group")
+	uploadPerPath := make(map[string]map[string]interface{})
+	logger := h.logger.WithField("action", "upload")
 
-		for _, data := range secrets.Data {
-			logger = logger.WithFields(log.Fields{
-				"name":      data.Name,
-				"extension": data.Extension,
-				"zip":       data.Zip,
-			})
-			logger.Info("Handling file")
+	if err = h.loop(logger, manifest, func(logger *log.Entry, group, vaultPath string, data SecretData) error {
+		logger.Info("Handling file")
+		file := NewFile(group, &data, []byte{})
 
-			file := NewFile(group, &data, []byte{})
+		if err = file.Read(h.config.InputDir); err != nil {
+			logger.Error("error on reading file", err)
+			return err
+		}
 
-			if err = file.Read(h.config.InputDir); err != nil {
-				logger.Error("error on reading file", err)
+		if data.Zip {
+			if err = file.Zip(); err != nil {
+				logger.Error("error on zipping payload", err)
 				return err
 			}
+		}
 
-			if data.Zip {
-				if err = file.Zip(); err != nil {
-					logger.Error("error on zipping payload", err)
-					return err
-				}
-			}
+		// preparing map of data for the same vault path, dealing with payload as string
+		vaultPath = h.composeVaultPath(data, vaultPath)
+		if _, exists := uploadPerPath[vaultPath]; !exists {
+			uploadPerPath[vaultPath] = make(map[string]interface{})
+		}
+		uploadPerPath[vaultPath][data.Name] = string(file.Payload())
 
-			if err = h.dispense(file, h.composeVaultPath(secrets, data)); err != nil {
-				logger.Error("error on writting data to vault", err)
-				return err
-			}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	for vaultPath, data := range uploadPerPath {
+		if err = h.dispense(vaultPath, data); err != nil {
+			h.logger.Error("error on writting data to vault", err)
+			return err
 		}
 	}
 
@@ -81,38 +80,50 @@ func (h *Handler) Upload(manifest *Manifest) error {
 func (h *Handler) Download(manifest *Manifest) error {
 	var err error
 
-	for group, secrets := range manifest.Secrets {
-		logger := h.logger.WithFields(log.Fields{"group": group, "vaultPath": secrets.Path})
-		logger.Info("Handling secrets")
+	logger := h.logger.WithField("action", "download")
 
-		for _, data := range secrets.Data {
-			var vaultPath = h.composeVaultPath(secrets, data)
-			var payload []byte
+	return h.loop(logger, manifest, func(logger *log.Entry, group, vaultPath string, data SecretData) error {
+		var payload []byte
 
-			logger.WithFields(log.Fields{
-				"name":      data.Name,
-				"extension": data.Extension,
-				"zip":       data.Zip,
-				"vaultPath": vaultPath,
-			}).Info("Reading data from Vault")
+		vaultPath = h.composeVaultPath(data, vaultPath)
+		logger = logger.WithField("vaultPath", vaultPath)
 
-			if payload, err = h.vault.Read(vaultPath, data.Name); err != nil {
+		logger.Info("Reading data from Vault")
+		if payload, err = h.vault.Read(vaultPath, data.Name); err != nil {
+			return err
+		}
+
+		logger.Info("Creating a file instance")
+		file := NewFile(group, &data, payload)
+
+		if data.Zip {
+			if err = file.Unzip(); err != nil {
 				return err
 			}
-			file := NewFile(group, &data, payload)
+		}
 
-			if data.Zip {
-				if err = file.Unzip(); err != nil {
-					return err
-				}
-			}
+		logger.Info("Persisting in file-system")
+		return h.persist(file)
+	})
+}
 
-			if err = h.persist(file); err != nil {
+// loop execute the primary manifest item loop, yielding informed method.
+func (h *Handler) loop(
+	logger *log.Entry,
+	manifest *Manifest,
+	fn func(logger *log.Entry, group, vaultPath string, data SecretData) error,
+) error {
+	for group, secrets := range manifest.Secrets {
+		logger = logger.WithFields(log.Fields{"group": group, "vaultPath": secrets.Path})
+		for _, data := range secrets.Data {
+			logger = logger.WithFields(log.Fields{
+				"name": data.Name, "extension": data.Extension, "zip": data.Zip,
+			})
+			if err := fn(logger, group, secrets.Path, data); err != nil {
 				return err
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -129,20 +140,23 @@ func (h *Handler) persist(file *File) error {
 	return nil
 }
 
-// dispense a file payload to Vault server.
-func (h *Handler) dispense(file *File, vaultPath string) error {
-	var data = make(map[string]interface{})
+// dispense a data map to a given vault path.
+func (h *Handler) dispense(vaultPath string, data map[string]interface{}) error {
 	var err error
+	logger := log.WithField("vaultPath", vaultPath)
+	logger.Info("Uploading secrets to Vault path")
 
-	logger := log.WithFields(log.Fields{"name": file.Name(), "vaultPath": vaultPath})
+	for name, payload := range data {
+		logger = logger.WithField("key", name)
+		logger.Info("Uploading key")
+		logger.Tracef("Payload: '%s'", payload)
+	}
 
 	if h.config.DryRun {
 		logger.Infof("[DRY-RUN] File is not uploaded to Vault!")
 		return nil
 	}
 
-	data[file.Name()] = string(file.Payload())
-	logger.Tracef("data: '%#v'", data)
 	if err = h.vault.Write(vaultPath, data); err != nil {
 		return err
 	}
@@ -151,11 +165,11 @@ func (h *Handler) dispense(file *File, vaultPath string) error {
 }
 
 // composeVaultPath based in the current SecretData.
-func (h *Handler) composeVaultPath(secrets Secrets, data SecretData) string {
+func (h *Handler) composeVaultPath(data SecretData, vaultPath string) string {
 	if !data.NameAsSubPath {
-		return secrets.Path
+		return vaultPath
 	}
-	return path.Join(secrets.Path, data.Name)
+	return path.Join(vaultPath, data.Name)
 }
 
 // NewHandler instantiates a new application.

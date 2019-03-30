@@ -10,10 +10,14 @@ import (
 )
 
 var uploadCmd = &cobra.Command{
-	Use:   "upload",
+	Use:   "upload [manifest-files]",
 	Run:   runUploadCmd,
-	Short: "",
-	Long:  ``,
+	Short: "Realize manifest uploading secrets to Vault.",
+	Long: ` # vault-handler upload
+
+Based on manifest, it will look for files in "--input-dir" based in naming convention, and upload
+data to Vault accordingly, following configuration for Vault's path and zipped contents.
+`,
 }
 
 // runUploadCmd execute the actions to upload files to vault.

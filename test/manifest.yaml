@@ -1,3 +1,4 @@
+---
 # manifest listing the secrets to copy from Vault
 secrets:
   # group name, used to name files, or will be employed as a Kubernetes Secret name.

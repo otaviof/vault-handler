@@ -1,0 +1,16 @@
+---
+secrets:
+  group1:
+    path: secret/data/group1
+    data:
+      - name: secret1
+        extension: pem
+      - name: secret2
+        extension: key
+  group2:
+    path: secret/data/group2
+    data:
+      - name: secret3
+        extension: pem
+      - name: secret4
+        extension: key

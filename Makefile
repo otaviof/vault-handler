@@ -31,6 +31,9 @@ clean:
 clean-vendor:
 	rm -rf ./vendor > /dev/null
 
+run:
+	go run -v cmd/$(APP)/* $(filter-out $@,$(MAKECMDGOALS))
+
 test:
 	go test -race -coverprofile=coverage.txt -covermode=atomic -cover -v pkg/$(APP)/*
 

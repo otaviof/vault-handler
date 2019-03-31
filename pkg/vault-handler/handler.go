@@ -74,7 +74,7 @@ func (h *Handler) Upload(manifest *Manifest) error {
 
 	for vaultPath, data := range uploadPerPath {
 		if err = h.dispense(vaultPath, data); err != nil {
-			h.logger.Error("error on writting data to vault", err)
+			h.logger.Error("error on writing data to vault", err)
 			return err
 		}
 	}
@@ -138,12 +138,9 @@ func (h *Handler) persist(file *File) error {
 	if h.config.DryRun {
 		log.WithField("path", file.FilePath(h.config.OutputDir)).
 			Info("[DRY-RUN] File is not written to file-system!")
-	} else {
-		if err := file.Write(h.config.OutputDir); err != nil {
-			return err
-		}
 	}
-	return nil
+
+	return file.Write(h.config.OutputDir)
 }
 
 // dispense a data map to a given vault path.

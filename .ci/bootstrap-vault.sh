@@ -94,7 +94,7 @@ SECRET_ID="$(get_secret_id)"
 
 register_app "${ROLE_ID}" "${SECRET_ID}"
 
-echo "# Writting '.env' file with Vault variables..."
+echo "# Writing '.env' file with Vault variables..."
 cat <<EOS > .env && cat .env
 VAULT_ADDR="${VAULT_ADDR}"
 VAULT_TOKEN="${VAULT_TOKEN}"

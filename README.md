@@ -55,7 +55,7 @@ Consider exporting configuration as environment variables to change the behavior
 This application is a client of Vault. You can choose either
 [AppRole](https://www.vaultproject.io/docs/auth/approle.html) type of authentication, which will
 request a runtime token, or directly use a
-[pre-requested token](https://www.vaultproject.io/docs/auth/token.html). Both ways are possible, but
+[existing token](https://www.vaultproject.io/docs/auth/token.html). Both ways are possible, but
 AppRole would be the recommended method.
 
 ## Configuration
@@ -127,7 +127,7 @@ the output directory, defined as command line parameter.
 
 ## Contributing
 
-In order to build and run `vault-hander` you will need the following:
+In order to build and test `vault-hander` you will need the following:
 
 - [Docker-Compose](https://docs.docker.com/compose/): to run Vault in the background;
 - [GNU/Make](https://www.gnu.org/software/make/): to run building and testing commands;
@@ -143,8 +143,10 @@ and [secrets K/V store](https://www.vaultproject.io/docs/secrets/kv/index.html).
 ``` bash
 # run vault in development mode
 docker-compose -d
+
 # bootstrap instance
 .ci/bootstrap-vault.sh
+
 # import environment variables to running shell
 source .env
 ```
@@ -154,12 +156,16 @@ And then you can:
 ``` bash
 # populate vendor
 make bootstrap
+
 # build application
 make
+
 # build docker image
 make build-docker
+
 # run unit-tests
 make test
+
 # run integration-tests
 make integration
 ```

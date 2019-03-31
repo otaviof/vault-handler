@@ -92,7 +92,7 @@ func (f *File) Write(baseDir string) error {
 		"name":    f.fileName(),
 		"bytes":   len(f.payload),
 		"baseDir": baseDir,
-	}).Info("Writting file content")
+	}).Info("Writing file content")
 	return ioutil.WriteFile(f.FilePath(baseDir), f.payload, 0600)
 }
 

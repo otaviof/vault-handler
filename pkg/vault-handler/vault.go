@@ -66,7 +66,7 @@ func (v *Vault) Read(path, key string) ([]byte, error) {
 func (v *Vault) Write(path string, data map[string]interface{}) error {
 	var err error
 
-	v.logger.WithField("path", path).Infof("Writting data to Vault path")
+	v.logger.WithField("path", path).Infof("Writing data to Vault path")
 
 	// wrapping up data for kv-v2
 	if strings.HasPrefix(path, "secret/data") {

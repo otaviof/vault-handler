@@ -8,8 +8,11 @@
     <a alt="Code Coverage" href="https://codecov.io/gh/otaviof/vault-handler">
         <img src="https://codecov.io/gh/otaviof/vault-handler/branch/master/graph/badge.svg">
     </a>
-    <a alt="Build Status" href="https://travis-ci.com/otaviof/vault-handler">
+    <a alt="CI Status" href="https://travis-ci.com/otaviof/vault-handler">
         <img src="https://travis-ci.com/otaviof/vault-handler.svg?branch=master">
+    </a>
+    <a alt="Docker-Cloud Build Status" href="https://hub.docker.com/r/otaviof/vault-handler">
+        <img src="https://img.shields.io/docker/cloud/build/otaviof/vault-handler.svg">
     </a>
 </p>
 
@@ -141,33 +144,19 @@ configuration to enable [AppRole](https://www.vaultproject.io/docs/auth/approle.
 and [secrets K/V store](https://www.vaultproject.io/docs/secrets/kv/index.html).
 
 ``` bash
-# run vault in development mode
-docker-compose -d
-
-# bootstrap instance
-.ci/bootstrap-vault.sh
-
-# import environment variables to running shell
-source .env
+docker-compose -d           # run vault in development mode
+.ci/bootstrap-vault.sh      # bootstrap instance
+source .env                 # import environment variables to running shell
 ```
 
 And then you can:
 
 ``` bash
-# populate vendor
-make bootstrap
-
-# build application
-make
-
-# build docker image
-make build-docker
-
-# run unit-tests
-make test
-
-# run integration-tests
-make integration
+make bootstrap              # populate vendor
+make                        # build application
+make build-docker           # build docker image
+make test                   # run unit-tests
+make integration            # run integration-tests
 ```
 
 Vault related bootstrap is needed only once, since data is kept over `.data` directory, so when you

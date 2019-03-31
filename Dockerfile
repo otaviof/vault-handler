@@ -33,13 +33,16 @@ ENV GO_DOMAIN="github.com" \
     GO_PROJECT="vault-handler"
 
 ENV APP_DIR="${GOPATH}/src/${GO_DOMAIN}/${GO_GROUP}/${GO_PROJECT}" \
-    VAULT_HANDLER_OUTPUT_DIR="/vault/secrets"
+    USER_UID="1111" \
+    VAULT_HANDLER_OUTPUT_DIR="/var/lib/vault-handler"
 
 RUN apk --update add bash
 COPY --from=builder ${APP_DIR}/build/${GO_PROJECT} /usr/local/bin/${GO_PROJECT}
 
-RUN mkdir -v -p ${VAULT_HANDLER_OUTPUT_DIR}
-WORKDIR ${VAULT_HANDLER_OUTPUT_DIR}
+RUN adduser -h ${VAULT_HANDLER_OUTPUT_DIR} -D -u ${USER_UID} ${GO_PROJECT}
+USER ${USER_UID}
+
 VOLUME ${VAULT_HANDLER_OUTPUT_DIR}
+WORKDIR ${VAULT_HANDLER_OUTPUT_DIR}
 
 ENTRYPOINT [ "/usr/local/bin/vault-handler" ]

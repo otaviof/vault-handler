@@ -20,11 +20,11 @@ const (
 var handler *Handler
 var handlerManifest = &Manifest{
 	Secrets: map[string]Secrets{
-		groupName: Secrets{
+		groupName: {
 			Path: "secret/data/test/handler/upload",
 			Data: []SecretData{
-				SecretData{Name: "zipped", Extension: "txt", NameAsSubPath: true, Zip: true},
-				SecretData{Name: "plain", Extension: "txt", NameAsSubPath: true, Zip: false},
+				{Name: "zipped", Extension: "txt", NameAsSubPath: true, Zip: true},
+				{Name: "plain", Extension: "txt", NameAsSubPath: true, Zip: false},
 			},
 		},
 	},

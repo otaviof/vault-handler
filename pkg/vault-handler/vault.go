@@ -82,7 +82,7 @@ func (v *Vault) Write(path string, data map[string]interface{}) error {
 
 // setHeaders prepare http request headers to inform token.
 func (v *Vault) setHeaders() {
-	headers := map[string][]string{"X-Vault-Token": []string{v.token}}
+	headers := map[string][]string{"X-Vault-Token": {v.token}}
 	v.client.SetHeaders(headers)
 	v.client.SetToken(v.token)
 }

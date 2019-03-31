@@ -145,7 +145,6 @@ func (h *Handler) persist(file *File) error {
 
 // dispense a data map to a given vault path.
 func (h *Handler) dispense(vaultPath string, data map[string]interface{}) error {
-	var err error
 	logger := log.WithField("vaultPath", vaultPath)
 	logger.Info("Uploading secrets to Vault path")
 
@@ -160,11 +159,7 @@ func (h *Handler) dispense(vaultPath string, data map[string]interface{}) error 
 		return nil
 	}
 
-	if err = h.vault.Write(vaultPath, data); err != nil {
-		return err
-	}
-
-	return nil
+	return h.vault.Write(vaultPath, data)
 }
 
 // composeVaultPath based in the current SecretData.

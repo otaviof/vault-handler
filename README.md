@@ -15,12 +15,19 @@
 
 # `vault-handler` (WIP)
 
-Is a command-line tool to download and manipulate data obtained from
-[Vault](https://www.vaultproject.io). The primary-use case of this application is to be used as a
-init-container, where is given a manifest file, and based on this manifest, `vault-handler` will
-create files accordingly.
+Is a manifest based application to upload and download secrets from
+[Hashicorp-Vault](https://www.vaultproject.io/). Therefore, the manifest file is promoted as
+"source-of-authority" over secrets that a given application may consume, where engineers can use
+the manifest to upload files, and later on use it as configuration input for downloading secrets
+on behalf of the application.
+
+You can employ `vault-handler` as a Kubernetes
+[init-container](https://kubernetes.io/docs/concepts/workloads/pods/init-containers) in order to
+download secrets, and have it as a command-line application to upload.
 
 ## Installing
+
+To install the command-line interface via `go get` use:
 
 ``` bash
 go get -u github.com/otaviof/vault-handler/cmd/vault-handler
@@ -37,7 +44,7 @@ docker run --interactive --tty otaviof/vault-handler:latest --help
 
 Downloading data from Vault would be, for instance:
 
-```
+``` bash
 docker run otaviof/vault-handler:latest download
 ```
 
@@ -53,31 +60,32 @@ AppRole would be the recommended method.
 
 ## Configuration
 
-### Command-Line
+All the options in command-line can be set via environment variables. The convention of environment
+variable names to add a prefix, `VAULT_HANDLER`, and the option name in capitals, replacing dashes
+(`-`) by underscore (`_`). For instance, `--vault-addr` would become `VAULT_HANDLER_VAULT_ADDR`
+in environment.
 
-After installing, please consider `vault-handler --help` for the command line help text. And the
-following parameters are used in command-line:
+## Usage
 
-- `--output-dir`: Output directory, where secret files will be written;
-- `--vault-addr`: Vault API endpoint;
-- `--vault-token`: Vault API token. Must not be used in combination with `--vault-role-id` or
-  `--vault-secret-id`;
-- `--vault-role-id`: AppRole role-id;
-- `--vault-secret-id`: AppRole secret-id;
-- `--dry-run`: Dry-run mode, no data will be written;
+The command-line interface is organized as follows:
 
-All the options in command-line can be set via environment variables. The convention of
-environment variable names to add a prefix, `VAULT_HANDLER`, and the option name in capitals,
-replacing dashes (`-`) by underscore (`_`). For instance, `--vault-addr` would become
-`VAULT_HANDLER_VAULT_ADDR` in environment.
+```
+vault-handler [command] [arguments] [manifest-files]
+```
 
-#### Usage
+Where as `command` you can use `upload` or `download`. Please check `--help` output in command-line
+to see all possible arguments.
 
-As a example of how to use `vault-handler` in command-line, consider the next example. The manifest
-file is the last argument, and you can inform more than one manifest file.
+A `upload` command example:
 
 ``` bash
-vault-handler --output-dir /var/tmp --dry-run <path/to/manifest.yaml>
+vault-handler upload --input-dir /var/tmp --dry-run /path/to/manifest.yaml
+```
+
+And then to `download`, use for instance:
+
+``` bash
+vault-handler download --output-dir /tmp --dry-run /path/to/manifest.yaml
 ```
 
 ### Manifest
@@ -117,6 +125,47 @@ ${GROUP_NAME}.${FILE_NAME}.${EXTENSION}
 Therefore, if you consider the example manifest, it would produce a file named `name.foo.txt` in
 the output directory, defined as command line parameter.
 
+## Contributing
+
+In order to build and run `vault-hander` you will need the following:
+
+- [Docker-Compose](https://docs.docker.com/compose/): to run Vault in the background;
+- [GNU/Make](https://www.gnu.org/software/make/): to run building and testing commands;
+- [Dep](https://github.com/golang/dep): to manage `vendor` folder (use `make dep` to install);
+- [Vault-CLI](https://www.vaultproject.io/docs/commands/): to apply initial configuration to Vault;
+
+### Building and Testing
+
+Before running tests, you will need to spin up Vault in the background, and apply initial
+configuration to enable [AppRole](https://www.vaultproject.io/docs/auth/approle.html) authentication,
+and [secrets K/V store](https://www.vaultproject.io/docs/secrets/kv/index.html).
+
+``` bash
+# run vault in development mode
+docker-compose -d
+# bootstrap instance
+.ci/bootstrap-vault.sh
+# import environment variables to running shell
+source .env
+```
+
+And then you can:
+
+``` bash
+# populate vendor
+make bootstrap
+# build application
+make
+# build docker image
+make build-docker
+# run unit-tests
+make test
+# run integration-tests
+make integration
+```
+
+Vault related bootstrap is needed only once, since data is kept over `.data` directory, so when you
+turn on development Vault instance again, it's not mandatory anymore to boostrap.
 
 
 

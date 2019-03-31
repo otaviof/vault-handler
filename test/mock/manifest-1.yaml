@@ -12,5 +12,6 @@ secrets:
     data:
       - name: secret3
         extension: pem
+        zip: true
       - name: secret4
         extension: key

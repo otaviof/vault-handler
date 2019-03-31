@@ -32,7 +32,9 @@ func TestVaultHandler(t *testing.T) {
 	t.Run("compare", compare)
 }
 
-func loopOverManifests(t *testing.T, fn func(t *testing.T, manifest *vh.Manifest)) {
+type actOnManifest func(t *testing.T, manifest *vh.Manifest)
+
+func loopOverManifests(t *testing.T, fn actOnManifest) {
 	for _, manifestFile := range manifestFiles {
 		manifest, err := vh.NewManifest(manifestFile)
 		assert.Nil(t, err)
@@ -40,9 +42,9 @@ func loopOverManifests(t *testing.T, fn func(t *testing.T, manifest *vh.Manifest
 	}
 }
 
-func loopOverGroupSecrets(
-	t *testing.T, manifest *vh.Manifest, fn func(t *testing.T, group string, data *vh.SecretData),
-) {
+type actOnSecret func(t *testing.T, group string, data *vh.SecretData)
+
+func loopOverGroupSecrets(t *testing.T, manifest *vh.Manifest, fn actOnSecret) {
 	for group, secrets := range manifest.Secrets {
 		for _, data := range secrets.Data {
 			fn(t, group, &data)
@@ -56,13 +58,23 @@ func readFile(t *testing.T, path string) []byte {
 	return fileBytes
 }
 
+func fileExists(path string) bool {
+	if _, err := os.Stat(path); err != nil {
+		return false
+	}
+	return true
+}
+
 func cleanUp(t *testing.T) {
 	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
 		loopOverGroupSecrets(t, manifest, func(t *testing.T, group string, data *vh.SecretData) {
 			file := vh.NewFile(group, data, nil)
 			path := file.FilePath(config.OutputDir)
+
 			t.Logf("Excluding file: '%s'", path)
+
 			_ = os.Remove(path)
+			assert.False(t, fileExists(path))
 		})
 	})
 }

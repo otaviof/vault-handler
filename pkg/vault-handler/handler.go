@@ -13,6 +13,9 @@ type Handler struct {
 	vault  *Vault     // vault api instance
 }
 
+// actOnSecret method that will receive a secret entry in a group, where vault-path is also shared.
+type actOnSecret func(logger *log.Entry, group, vaultPath string, data SecretData) error
+
 // Authenticate against vault either via token directly or via AppRole, must be invoked before other
 // actions using the API.
 func (h *Handler) Authenticate() error {
@@ -112,16 +115,15 @@ func (h *Handler) Download(manifest *Manifest) error {
 }
 
 // loop execute the primary manifest item loop, yielding informed method.
-func (h *Handler) loop(
-	logger *log.Entry,
-	manifest *Manifest,
-	fn func(logger *log.Entry, group, vaultPath string, data SecretData) error,
-) error {
+func (h *Handler) loop(logger *log.Entry, manifest *Manifest, fn actOnSecret) error {
 	for group, secrets := range manifest.Secrets {
-		logger = logger.WithFields(log.Fields{"group": group, "vaultPath": secrets.Path})
 		for _, data := range secrets.Data {
 			logger = logger.WithFields(log.Fields{
-				"name": data.Name, "extension": data.Extension, "zip": data.Zip,
+				"name":      data.Name,
+				"extension": data.Extension,
+				"zip":       data.Zip,
+				"group":     group,
+				"vaultPath": secrets.Path,
 			})
 			if err := fn(logger, group, secrets.Path, data); err != nil {
 				return err

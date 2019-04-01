@@ -8,8 +8,8 @@
     <a alt="Code Coverage" href="https://codecov.io/gh/otaviof/vault-handler">
         <img alt="Code Coverage" src="https://codecov.io/gh/otaviof/vault-handler/branch/master/graph/badge.svg">
     </a>
-    <a href="https://godoc.org/github.com/otaviof/shorty/pkg/shorty">
-        <img alt="GoDoc Reference" src="https://godoc.org/github.com/otaviof/shorty/pkg/shorty?status.svg">
+    <a href="https://godoc.org/github.com/otaviof/vault-handler/pkg/vault-handler">
+        <img alt="GoDoc Reference" src="https://godoc.org/github.com/otaviof/vault-handler/pkg/vault-handler?status.svg">
     </a>
     <a alt="CI Status" href="https://travis-ci.com/otaviof/vault-handler">
         <img alt="CI Status" src="https://travis-ci.com/otaviof/vault-handler.svg?branch=master">
@@ -24,8 +24,8 @@
 Is a manifest based application to upload and download secrets from
 [Hashicorp-Vault](https://www.vaultproject.io/). Therefore, the manifest file is promoted as
 "source-of-authority" over secrets that a given application may consume, where engineers can use
-the manifest to upload files, and later on use it as configuration input for downloading secrets
-on behalf of the application.
+the manifest to upload secrets, and later on use it as configuration input for downloading secrets
+on applications' behalf.
 
 You can employ `vault-handler` as a Kubernetes
 [init-container](https://kubernetes.io/docs/concepts/workloads/pods/init-containers) in order to
@@ -70,6 +70,8 @@ All the options in command-line can be set via environment variables. The conven
 variable names to add a prefix, `VAULT_HANDLER`, and the option name in capitals, replacing dashes
 (`-`) by underscore (`_`). For instance, `--vault-addr` would become `VAULT_HANDLER_VAULT_ADDR`
 in environment.
+
+Additionally, command-line arguments overwrite what's informed via environment variables.
 
 ## Usage
 
@@ -165,7 +167,9 @@ make integration            # run integration-tests
 Vault related bootstrap is needed only once, since data is kept over `.data` directory, so when you
 turn on development Vault instance again, it's not mandatory anymore to boostrap.
 
+To clean it up, you can:
 
-
-
-
+``` bash
+docker-compose down --volumes
+rm -rf ./data
+```

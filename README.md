@@ -8,8 +8,8 @@
     <a alt="Code Coverage" href="https://codecov.io/gh/otaviof/vault-handler">
         <img alt="Code Coverage" src="https://codecov.io/gh/otaviof/vault-handler/branch/master/graph/badge.svg">
     </a>
-    <a href="https://godoc.org/github.com/otaviof/shorty/pkg/shorty">
-        <img alt="GoDoc Reference" src="https://godoc.org/github.com/otaviof/shorty/pkg/shorty?status.svg">
+    <a href="https://godoc.org/github.com/otaviof/vault-handler/pkg/vault-handler">
+        <img alt="GoDoc Reference" src="https://godoc.org/github.com/otaviof/vault-handler/pkg/vault-handler?status.svg">
     </a>
     <a alt="CI Status" href="https://travis-ci.com/otaviof/vault-handler">
         <img alt="CI Status" src="https://travis-ci.com/otaviof/vault-handler.svg?branch=master">

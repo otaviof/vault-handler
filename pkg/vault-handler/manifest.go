@@ -11,16 +11,19 @@ type Manifest struct {
 
 // Secrets map with group-name, metadata and secrets list.
 type Secrets struct {
-	Path string       `yaml:"path"`
-	Data []SecretData `yaml:"data"`
+	Path string       `yaml:"path"`           // vault path
+	Type string       `yaml:"type,omitempty"` // kubernetes secret type
+	Data []SecretData `yaml:"data"`           // secret entries
 }
 
 // SecretData define a single secret in Vault, mapping to a regular file.
 type SecretData struct {
 	Name          string `yaml:"name"`                    // file name
-	Extension     string `yaml:"extension"`               // file extension
+	Extension     string `yaml:"extension,omitempty"`     // file extension
 	Zip           bool   `yaml:"zip,omitempty"`           // deal with zipped payload
 	NameAsSubPath bool   `yaml:"nameAsSubPath,omitempty"` // employ name as part of the path
+	Key           string `yaml:"key,omitempty"`           // vault key
+	FromEnv       string `yaml:"fromEnv,omitempty"`       // load payload from environment
 }
 
 // NewManifest by parsing informed manifest file.

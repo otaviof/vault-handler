@@ -13,6 +13,10 @@ type Config struct {
 	VaultToken    string // vault token
 	VaultRoleID   string // vault approle role-id
 	VaultSecretID string // vault approle secret-id
+	InCluster     bool   // kubernetes in-cluster
+	Context       string // kubernetes context
+	Namespace     string // kubernetes namespace
+	KubeConfig    string // kubernetes config
 }
 
 // Validate configuration object.
@@ -35,6 +39,19 @@ func (c *Config) Validate() error {
 	if c.OutputDir != "" && !isDir(c.OutputDir) {
 		return fmt.Errorf("output-dir '%s' is not found", c.OutputDir)
 	}
+	return nil
+}
 
+// ValidateKubernetes configuration related to Kubernetes.
+func (c *Config) ValidateKubernetes() error {
+	if c.InCluster && c.Context != "" {
+		return fmt.Errorf("configuration 'context' cannot be used in combination with 'in-cluster'")
+	}
+	if c.Namespace == "" {
+		return fmt.Errorf("namespace is not informed")
+	}
+	if c.KubeConfig != "" && !fileExists(c.KubeConfig) {
+		return fmt.Errorf("can't find kube-config file at '%s'", c.KubeConfig)
+	}
 	return nil
 }

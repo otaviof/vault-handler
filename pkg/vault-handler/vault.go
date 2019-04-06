@@ -3,6 +3,7 @@ package vaulthandler
 import (
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 
 	vaultapi "github.com/hashicorp/vault/api"
@@ -105,6 +106,14 @@ func (v *Vault) extractKey(payload map[string]interface{}, key string) ([]byte, 
 	logger.Info("Read key from Vault")
 	logger.Tracef("data '%s'", data)
 	return []byte(data), nil
+}
+
+// composeVaultPath based in the current SecretData.
+func (v *Vault) composePath(data SecretData, vaultPath string) string {
+	if !data.NameAsSubPath {
+		return vaultPath
+	}
+	return path.Join(vaultPath, data.Name)
 }
 
 // NewVault creates a Vault instance, by bootstrapping it's API client.

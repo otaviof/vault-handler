@@ -1,6 +1,7 @@
 package vaulthandler
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -47,4 +48,15 @@ func TestVaultRead(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, string(out), foo)
+}
+
+func TestVaultComposePath(t *testing.T) {
+	path := vault.composePath(SecretData{Name: "name", Extension: "ext"},
+		handlerManifest.Secrets[groupName].Path)
+	assert.Equal(t, handlerManifest.Secrets[groupName].Path, path)
+
+	data := SecretData{Name: "name", Extension: "ext", NameAsSubPath: true}
+	path = vault.composePath(data, handlerManifest.Secrets[groupName].Path)
+	expect := fmt.Sprintf("%s/%s", handlerManifest.Secrets[groupName].Path, data.Name)
+	assert.Equal(t, expect, path)
 }

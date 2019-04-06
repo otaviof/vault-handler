@@ -109,37 +109,3 @@ func TestHandlerDownload(t *testing.T) {
 	assert.FileExists(t, plainPath)
 	assert.Equal(t, []byte("plain"), readFile(plainPath))
 }
-
-func TestHandlerPersist(t *testing.T) {
-	var err error
-
-	payload := []byte("persist")
-	data := &SecretData{Name: "name", Extension: "ext"}
-	file := NewFile("persist", data, payload)
-	_ = os.Remove(file.FilePath(outputDir))
-
-	err = handler.persist(file)
-
-	assert.Nil(t, err)
-	assert.Equal(t, payload, readFile(file.FilePath(outputDir)))
-}
-
-func TestHandlerDispense(t *testing.T) {
-	var err error
-
-	err = handler.dispense("secret/data/test/handler/dispense",
-		map[string]interface{}{"name": []byte("dispense")})
-
-	assert.Nil(t, err)
-}
-
-func TestHandlerComposeVaultPath(t *testing.T) {
-	path := handler.composeVaultPath(SecretData{Name: "name", Extension: "ext"},
-		handlerManifest.Secrets[groupName].Path)
-	assert.Equal(t, handlerManifest.Secrets[groupName].Path, path)
-
-	data := SecretData{Name: "name", Extension: "ext", NameAsSubPath: true}
-	path = handler.composeVaultPath(data, handlerManifest.Secrets[groupName].Path)
-	expect := fmt.Sprintf("%s/%s", handlerManifest.Secrets[groupName].Path, data.Name)
-	assert.Equal(t, expect, path)
-}

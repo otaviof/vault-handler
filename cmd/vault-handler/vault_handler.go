@@ -103,7 +103,7 @@ func bootstrap() *vh.Handler {
 	return handler
 }
 
-// loopManifests loop args and tranform them in manifest instances, yielding informed func.
+// loopManifests loop args and transform them in manifest instances, yielding informed func.
 func loopManifests(logger *log.Entry, args []string, fn actOnManifest) error {
 	var m *vh.Manifest
 	var err error

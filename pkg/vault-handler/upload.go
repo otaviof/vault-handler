@@ -8,17 +8,16 @@ import (
 type Upload struct {
 	logger        *log.Entry                        // logger
 	vault         *Vault                            // vault api instance
-	manifest      *Manifest                         // manifest instance
 	inputDir      string                            // input directory path
 	uploadPerPath map[string]map[string]interface{} // map of vault-paths with another for secrets
 }
 
 // Prepare by reading secrets and letting them ready for next step of uploading.
-func (u *Upload) Prepare(logger *log.Entry, group, vaultPath string, data SecretData) error {
+func (u *Upload) Prepare(logger *log.Entry, group, secretType, vaultPath string, data SecretData) error {
 	var err error
 
 	logger.Info("Handling file")
-	file := NewFile(group, &data, []byte{})
+	file := NewFile(group, secretType, &data, []byte{})
 
 	if err = file.Read(u.inputDir); err != nil {
 		logger.Error("error on reading file", err)
@@ -36,7 +35,7 @@ func (u *Upload) Prepare(logger *log.Entry, group, vaultPath string, data Secret
 	if _, exists := u.uploadPerPath[vaultPath]; !exists {
 		u.uploadPerPath[vaultPath] = make(map[string]interface{})
 	}
-	u.uploadPerPath[vaultPath][data.Name] = string(file.Payload())
+	u.uploadPerPath[vaultPath][data.Name] = string(file.Payload)
 
 	return nil
 }
@@ -74,11 +73,10 @@ func (u *Upload) vaultWrite(vaultPath string, data map[string]interface{}, dryRu
 }
 
 // NewUpload creates a new instance of Upload.
-func NewUpload(vault *Vault, manifest *Manifest, inputDir string) *Upload {
+func NewUpload(vault *Vault, inputDir string) *Upload {
 	return &Upload{
 		logger:        log.WithField("type", "upload"),
 		vault:         vault,
-		manifest:      manifest,
 		inputDir:      inputDir,
 		uploadPerPath: make(map[string]map[string]interface{}),
 	}

@@ -12,7 +12,7 @@ type Handler struct {
 }
 
 // actOnSecret method that will receive a secret entry in a group, where vault-path is also shared.
-type actOnSecret func(logger *log.Entry, group, vaultPath string, data SecretData) error
+type actOnSecret func(logger *log.Entry, group, secretType, vaultPath string, data SecretData) error
 
 // Authenticate against vault either via token directly or via AppRole, must be invoked before other
 // actions using the API.
@@ -36,7 +36,7 @@ func (h *Handler) Authenticate() error {
 func (h *Handler) Upload(manifest *Manifest) error {
 	var err error
 
-	u := NewUpload(h.vault, manifest, h.config.InputDir)
+	u := NewUpload(h.vault, h.config.InputDir)
 	if err = h.loop(h.logger.WithField("action", "upload"), manifest, u.Prepare); err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (h *Handler) Upload(manifest *Manifest) error {
 func (h *Handler) Download(manifest *Manifest) error {
 	var err error
 
-	d := NewDownload(h.vault, manifest, h.config.OutputDir)
+	d := NewDownload(h.vault, h.config.OutputDir)
 	if err = h.loop(h.logger.WithField("action", "download"), manifest, d.Prepare); err != nil {
 		return err
 	}
@@ -58,7 +58,27 @@ func (h *Handler) Download(manifest *Manifest) error {
 
 // Copy secrets from Vault into Kubernetes.
 func (h *Handler) Copy(manifest *Manifest) error {
-	return nil
+	var k *Kubernetes
+	var err error
+
+	if k, err = NewKubernetes(
+		h.config.KubeConfig, h.config.Context, h.config.Namespace, h.config.InCluster,
+	); err != nil {
+		return err
+	}
+
+	// downloading data using regular approach
+	d := NewDownload(h.vault, "")
+	if err = h.loop(h.logger.WithField("action", "copy"), manifest, d.Prepare); err != nil {
+		return err
+	}
+
+	// preparing copy of downloaded data to kubernetes
+	c := NewCopy(k, d)
+	if err = c.Prepare(); err != nil {
+		return err
+	}
+	return c.Execute(h.config.DryRun)
 }
 
 // loop execute the primary manifest item loop, yielding informed method.
@@ -66,13 +86,14 @@ func (h *Handler) loop(logger *log.Entry, manifest *Manifest, fn actOnSecret) er
 	for group, secrets := range manifest.Secrets {
 		for _, data := range secrets.Data {
 			logger = logger.WithFields(log.Fields{
-				"name":      data.Name,
-				"extension": data.Extension,
-				"zip":       data.Zip,
-				"group":     group,
-				"vaultPath": secrets.Path,
+				"name":       data.Name,
+				"extension":  data.Extension,
+				"zip":        data.Zip,
+				"group":      group,
+				"vaultPath":  secrets.Path,
+				"secretType": secrets.Type,
 			})
-			if err := fn(logger, group, secrets.Path, data); err != nil {
+			if err := fn(logger, group, secrets.Type, secrets.Path, data); err != nil {
 				return err
 			}
 		}

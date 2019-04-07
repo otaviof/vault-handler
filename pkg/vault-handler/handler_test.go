@@ -69,13 +69,13 @@ func TestHandlerUpload(t *testing.T) {
 	var err error
 
 	_ = os.Remove(fmtManifestFilePath(inputDir, 0))
-	zipped := NewFile(groupName, &handlerManifest.Secrets[groupName].Data[0], []byte("zipped"))
+	zipped := NewFile(groupName, "", &handlerManifest.Secrets[groupName].Data[0], []byte("zipped"))
 	err = zipped.Write(inputDir)
 	assert.Nil(t, err)
 	assert.Equal(t, fmtManifestFilePath(inputDir, 0), zipped.FilePath(inputDir))
 
 	_ = os.Remove(fmtManifestFilePath(inputDir, 1))
-	plain := NewFile(groupName, &handlerManifest.Secrets[groupName].Data[1], []byte("plain"))
+	plain := NewFile(groupName, "", &handlerManifest.Secrets[groupName].Data[1], []byte("plain"))
 	err = plain.Write(inputDir)
 	assert.Nil(t, err)
 	assert.Equal(t, fmtManifestFilePath(inputDir, 1), plain.FilePath(inputDir))

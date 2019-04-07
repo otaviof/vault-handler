@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -18,6 +19,10 @@ var config = &vh.Config{
 	OutputDir:     "/tmp",
 	VaultRoleID:   os.Getenv("VAULT_HANDLER_VAULT_ROLE_ID"),
 	VaultSecretID: os.Getenv("VAULT_HANDLER_VAULT_SECRET_ID"),
+	KubeConfig:    os.Getenv("KUBE_CONFIG"),
+	Context:       "",
+	Namespace:     "default",
+	InCluster:     false,
 }
 
 func TestVaultHandler(t *testing.T) {
@@ -29,7 +34,12 @@ func TestVaultHandler(t *testing.T) {
 	t.Run("upload", upload)
 	t.Run("DRY-RUN download", downloadDryRun)
 	t.Run("download", download)
-	t.Run("compare", compare)
+	t.Run("compare files", compareFiles)
+	t.Run("DRY-RUN copy", copyDryRun)
+	t.Run("copy", copy)
+	t.Run("DRY-RUN copy having secrets", copyDryRun)
+	t.Run("copy having secrets", copy)
+	t.Run("compare secrets", compareSecrets)
 }
 
 type actOnManifest func(t *testing.T, manifest *vh.Manifest)
@@ -68,7 +78,7 @@ func fileExists(path string) bool {
 func cleanUp(t *testing.T) {
 	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
 		loopOverGroupSecrets(t, manifest, func(t *testing.T, group string, data *vh.SecretData) {
-			file := vh.NewFile(group, data, nil)
+			file := vh.NewFile(group, "", data, nil)
 			path := file.FilePath(config.OutputDir)
 
 			t.Logf("Excluding file: '%s'", path)
@@ -91,17 +101,14 @@ func spinUpNewHandler(t *testing.T, dryRun bool) *vh.Handler {
 }
 
 func uploadDryRun(t *testing.T) {
-	handler := spinUpNewHandler(t, true)
-
-	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
-		err := handler.Upload(manifest)
-		assert.Nil(t, err)
-	})
+	runUpload(t, spinUpNewHandler(t, true))
 }
 
 func upload(t *testing.T) {
-	handler := spinUpNewHandler(t, false)
+	runUpload(t, spinUpNewHandler(t, false))
+}
 
+func runUpload(t *testing.T, handler *vh.Handler) {
 	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
 		err := handler.Upload(manifest)
 		assert.Nil(t, err)
@@ -109,27 +116,24 @@ func upload(t *testing.T) {
 }
 
 func downloadDryRun(t *testing.T) {
-	handler := spinUpNewHandler(t, true)
-
-	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
-		err := handler.Download(manifest)
-		assert.Nil(t, err)
-	})
+	runDownload(t, spinUpNewHandler(t, true))
 }
 
 func download(t *testing.T) {
-	handler := spinUpNewHandler(t, false)
+	runDownload(t, spinUpNewHandler(t, false))
+}
 
+func runDownload(t *testing.T, handler *vh.Handler) {
 	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
 		err := handler.Download(manifest)
 		assert.Nil(t, err)
 	})
 }
 
-func compare(t *testing.T) {
+func compareFiles(t *testing.T) {
 	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
 		loopOverGroupSecrets(t, manifest, func(t *testing.T, group string, data *vh.SecretData) {
-			file := vh.NewFile(group, data, nil)
+			file := vh.NewFile(group, "", data, nil)
 			pathIn := file.FilePath(config.InputDir)
 			pathOut := file.FilePath(config.OutputDir)
 
@@ -138,4 +142,48 @@ func compare(t *testing.T) {
 			assert.Equal(t, string(readFile(t, pathIn)), string(readFile(t, pathOut)))
 		})
 	})
+}
+
+func copyDryRun(t *testing.T) {
+	runCopy(t, spinUpNewHandler(t, true))
+}
+
+func copy(t *testing.T) {
+	runCopy(t, spinUpNewHandler(t, false))
+}
+
+func runCopy(t *testing.T, handler *vh.Handler) {
+	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
+		err := handler.Copy(manifest)
+		assert.Nil(t, err)
+	})
+}
+
+func compareSecrets(t *testing.T) {
+	vaultSecrets := make(map[string]map[string][]byte)
+
+	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
+		loopOverGroupSecrets(t, manifest, func(t *testing.T, group string, data *vh.SecretData) {
+			file := vh.NewFile(group, "", data, nil)
+			err := file.Read(config.OutputDir)
+			assert.Nil(t, err)
+
+			if _, exists := vaultSecrets[group]; !exists {
+				vaultSecrets[group] = make(map[string][]byte)
+			}
+			vaultSecrets[group][file.Properties.Name] = file.Payload
+		})
+	})
+
+	kube, err := vh.NewKubernetes(config.KubeConfig, config.Context, config.Namespace, config.InCluster)
+	assert.Nil(t, err)
+
+	for group, data := range vaultSecrets {
+		kubeSecrets, err := kube.SecretRead(group)
+		assert.Nil(t, err)
+		for name, payload := range data {
+			t.Logf("Comparing Kubenetes secret '%s' key '%s', %d bytes", group, name, len(payload))
+			assert.Equal(t, string(payload), fmt.Sprintf("%s\n", string(kubeSecrets[name])))
+		}
+	}
 }

@@ -1,0 +1,11 @@
+---
+secrets:
+  vaultAppRole:
+    path: secret/data/vault-approle
+    data:
+      - name: role-id
+        extension: token
+        fromEnv: VAULT_HANDLER_VAULT_ROLE_ID
+      - name: secret-id
+        extension: token
+        fromEnv: VAULT_HANDLER_VAULT_SECRET_ID

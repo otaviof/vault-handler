@@ -1,0 +1,10 @@
+---
+secrets:
+  ingress:
+    path: secret/data/kube/tls
+    type: kubernetes.io/tls
+    data:
+      - name: tls.crt
+        extension: secret
+      - name: tls.key
+        extension: secret

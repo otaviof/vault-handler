@@ -5,9 +5,8 @@ secrets:
   name:
     # path in vault
     path: secret/data/dir1/dir2
-    # type of format the secret is stored, use "file" to save it to a file, or a valid Kubernetes
-    # Secret type to copy it to the cluster.
-    type: file # kubernetes.io/tls
+    # when copying it to kubernetes, you can set its type
+    type: kubernetes.io/tls
     # data contained in respective vault path.
     data:
       # entity name, employed to name "file" or "key" for Kubernetes secret

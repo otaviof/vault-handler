@@ -135,7 +135,8 @@ Description of the options used in manifest:
 - `name.data.zip`: file contents is GZIP, needs to be compressed/decompressed;
 - `name.data.nameAsSubPath`: employ name as final part of the Vault path `name.path`;
 - `name.data.key`: employ a alternative key name on Vault;
-
+- `name.data.fromEnv`: instead of reading file payload from file-system, you can use a environment
+  variable instead. The value informed for this option is the environment variable to be read;
 
 ### File Naming Convention
 

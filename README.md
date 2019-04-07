@@ -27,6 +27,9 @@ Is a manifest based application to upload and download secrets from
 the manifest to upload secrets, and later on use it as configuration input for downloading secrets
 on applications' behalf.
 
+Once a set of secrets is uploaded to Vault, you can `copy` them over to Kubernetes, and keep secrets
+in sync by running `copy` command at later times.
+
 You can employ `vault-handler` as a Kubernetes
 [init-container](https://kubernetes.io/docs/concepts/workloads/pods/init-containers) in order to
 download secrets, and have it as a command-line application to upload.
@@ -101,14 +104,16 @@ vault-handler download --output-dir /tmp --dry-run /path/to/manifest.yaml
 The following snippet is a manifest example.
 
 ``` yaml
+---
 secrets:
-  name:
-    path: secret/data/dir1/dir2
+  ingress:
+    path: secret/data/kube/tls
+    type: kubernetes.io/tls
     data:
-      - name: foo
-        extension: txt
-        zip: false
-        nameAsSubPath: false
+      - name: tls.crt
+        extension: secret
+      - name: tls.key
+        extension: secret
 ```
 
 Description of the options used in manifest:
@@ -117,10 +122,13 @@ Description of the options used in manifest:
 - `name`: arbitrary group "name". This group-name is also employed to name final files;
 - `name.path`: path in Vault. When using V2 key-value store, you may need to inform
   `/secret/data`, while in V1 API it would be directly `/secret`;
+- `name.type`: Kubernetes secret type, used by `copy` sub-command;
 - `name.data.name`: file name;
 - `name.data.extension`: file extension;
 - `name.data.zip`: file contents is GZIP, needs to be compressed/decompressed;
 - `name.data.nameAsSubPath`: employ name as final part of the Vault path `name.path`;
+- `name.data.key`: employ a alternative key name on Vault;
+
 
 ### File Naming Convention
 
@@ -147,6 +155,10 @@ In order to build and test `vault-hander` you will need the following:
 Before running tests, you will need to spin up Vault in the background, and apply initial
 configuration to enable [AppRole](https://www.vaultproject.io/docs/auth/approle.html) authentication,
 and [secrets K/V store](https://www.vaultproject.io/docs/secrets/kv/index.html).
+
+Additionally you need a Kubernetes cluster available, please consider
+[minikube project](https://kubernetes.io/docs/setup/minikube/). During [CI](./.travis.yml),
+[KinD](https://github.com/kubernetes-sigs/kind) project is used.
 
 ``` bash
 docker-compose -d           # run vault in development mode

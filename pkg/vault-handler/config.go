@@ -30,9 +30,6 @@ func (c *Config) Validate() error {
 	if c.VaultToken != "" && (c.VaultRoleID != "" || c.VaultSecretID != "") {
 		return fmt.Errorf("vault-token can't be used in combination with role-id or secret-id")
 	}
-	if c.InputDir == "" && c.OutputDir == "" {
-		return fmt.Errorf("both input-dir and output-dir are empty")
-	}
 	if c.InputDir != "" && !isDir(c.InputDir) {
 		return fmt.Errorf("input-dir '%s' is not found", c.InputDir)
 	}

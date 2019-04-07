@@ -54,6 +54,7 @@ func TestHandlerAuthenticateAppRole(t *testing.T) {
 		VaultSecretID: os.Getenv("VAULT_HANDLER_VAULT_SECRET_ID"),
 		InputDir:      inputDir,
 		OutputDir:     outputDir,
+		Namespace:     "default",
 	}
 	err = config.Validate()
 	assert.Nil(t, err)
@@ -108,4 +109,9 @@ func TestHandlerDownload(t *testing.T) {
 
 	assert.FileExists(t, plainPath)
 	assert.Equal(t, []byte("plain"), readFile(plainPath))
+}
+
+func TestHandlerCopy(t *testing.T) {
+	err := handler.Copy(handlerManifest)
+	assert.Nil(t, err)
 }

@@ -99,9 +99,16 @@ And then to `download`, use for instance:
 vault-handler download --output-dir /tmp --dry-run /path/to/manifest.yaml
 ```
 
+Afterwards you can `copy` secrets to Kubernetes:
+
+``` bash
+vault-handler copy --namespace default --dry-run /path/to/manifest.yaml
+```
+
 ### Manifest
 
-The following snippet is a manifest example.
+The following snippet is a manifest example, the actual secrets can be found
+[here](./test/mock/kube-secrets).
 
 ``` yaml
 ---

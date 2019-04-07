@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	vaulthandler "github.com/otaviof/vault-handler/pkg/vault-handler"
+	vh "github.com/otaviof/vault-handler/pkg/vault-handler"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,29 +35,34 @@ YAML based manifest files are the last argument in "vault-handler" command-line.
 layout of files in the file-system, and will drive the reflection of this data in Vault. Please
 consider the GitHub project page for manifest documentation:
 
-	https://github.com/otaviof/vault-handler
+    https://github.com/otaviof/vault-handler
 
 ## Example
 
 First you may want to export configuration in the environment:
 
-	$ export VAULT_HANDLER_VAULT_ADDR="http://127.0.0.1:8200"
-	$ export VAULT_HANDLER_VAULT_ROLE_ID="role-id"
-	$ export VAULT_HANDLER_VAULT_SECRET_ID="secret-id"
+    $ export VAULT_HANDLER_VAULT_ADDR="http://127.0.0.1:8200"
+    $ export VAULT_HANDLER_VAULT_ROLE_ID="role-id"
+    $ export VAULT_HANDLER_VAULT_SECRET_ID="secret-id"
 
 And later call "vault-handler" with additional arguments, and the manifest files:
 
-	$ vault-handler upload --input-dir /var/tmp --dry-run /path/to/manifest.yaml
-	$ vault-handler download --output-dir /tmp --dry-run /path/to/manifest.yaml
+    $ vault-handler upload --input-dir /var/tmp --dry-run /path/to/manifest.yaml
+    $ vault-handler download --output-dir /tmp --dry-run /path/to/manifest.yaml
 
 ## Command-Line
 `,
 }
 
+var config *vh.Config // global configuration instance
+
+// actOnManifest method to be called per manifest instance
+type actOnManifest func(logger *log.Entry, m *vh.Manifest)
+
 // configFromEnv creates a configuration object using Viper, which brings overwritten values from
 // environment variables.
-func configFromEnv() *vaulthandler.Config {
-	return &vaulthandler.Config{
+func configFromEnv() *vh.Config {
+	return &vh.Config{
 		DryRun:        viper.GetBool("dry-run"),
 		OutputDir:     viper.GetString("output-dir"),
 		InputDir:      viper.GetString("input-dir"),
@@ -65,13 +70,17 @@ func configFromEnv() *vaulthandler.Config {
 		VaultToken:    viper.GetString("vault-token"),
 		VaultRoleID:   viper.GetString("vault-role-id"),
 		VaultSecretID: viper.GetString("vault-secret-id"),
+		InCluster:     viper.GetBool("in-cluster"),
+		Context:       viper.GetString("context"),
+		Namespace:     viper.GetString("namespace"),
+		KubeConfig:    viper.GetString("kube-config"),
 	}
 }
 
 // bootstrap creates connection with vault, by instantiating Handler.
-func bootstrap() *vaulthandler.Handler {
+func bootstrap() *vh.Handler {
 	var level log.Level
-	var handler *vaulthandler.Handler
+	var handler *vh.Handler
 	var err error
 
 	if level, err = log.ParseLevel(viper.GetString("log-level")); err != nil {
@@ -79,11 +88,12 @@ func bootstrap() *vaulthandler.Handler {
 	}
 	log.SetLevel(level)
 
-	config := configFromEnv()
+	config = configFromEnv()
+
 	if err = config.Validate(); err != nil {
 		log.Fatalf("[ERROR] On validating parameters: '%s'", err)
 	}
-	if handler, err = vaulthandler.NewHandler(config); err != nil {
+	if handler, err = vh.NewHandler(config); err != nil {
 		log.Fatalf("[ERROR] On instantiating Vault-API: '%s'", err)
 	}
 	if err = handler.Authenticate(); err != nil {
@@ -91,6 +101,26 @@ func bootstrap() *vaulthandler.Handler {
 	}
 
 	return handler
+}
+
+// loopManifests loop args and tranform them in manifest instances, yielding informed func.
+func loopManifests(logger *log.Entry, args []string, fn actOnManifest) error {
+	var m *vh.Manifest
+	var err error
+
+	for _, manifestFile := range args {
+		logger = logger.WithField("manifest", manifestFile)
+		logger.Info("Handling manifest definitions")
+
+		if m, err = vh.NewManifest(manifestFile); err != nil {
+			logger.Fatalf("On parsing manifest: '%s'", err)
+			os.Exit(1)
+		}
+
+		fn(logger, m)
+	}
+
+	return nil
 }
 
 // init command-line flags and configuration coming from environment.

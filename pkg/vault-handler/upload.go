@@ -1,6 +1,9 @@
 package vaulthandler
 
 import (
+	"fmt"
+	"os"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -19,9 +22,19 @@ func (u *Upload) Prepare(logger *log.Entry, group, secretType, vaultPath string,
 	logger.Info("Handling file")
 	file := NewFile(group, secretType, &data, []byte{})
 
-	if err = file.Read(u.inputDir); err != nil {
-		logger.Error("error on reading file", err)
-		return err
+	if data.FromEnv != "" {
+		logger.Infof("Reading payload from environment-variable '%s'", data.FromEnv)
+		payload := os.Getenv(data.FromEnv)
+		if payload == "" {
+			return fmt.Errorf("can't find environment variable '%s'", data.FromEnv)
+		}
+		file.Payload = []byte(payload)
+	} else {
+		logger.Infof("Reading payload from file-system.")
+		if err = file.Read(u.inputDir); err != nil {
+			logger.Error("error on reading file", err)
+			return err
+		}
 	}
 	if data.Zip {
 		if err = file.Zip(); err != nil {

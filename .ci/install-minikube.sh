@@ -24,3 +24,7 @@ fi
 if ! kind create cluster ; then
     die "On creating a kind cluster"
 fi
+
+if [ ! -d "${HOME}/.kube" ] ; then
+    mkdir ${HOME}/.kube || die "On creating '${HOME}/.kube' dir"
+fi

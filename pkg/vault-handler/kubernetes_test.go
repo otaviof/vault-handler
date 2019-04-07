@@ -12,6 +12,7 @@ func TestKubernetesNew(t *testing.T) {
 	var err error
 
 	kubeConfig := os.Getenv("KUBE_CONFIG")
+	t.Logf("Test kube-config: '%s'", kubeConfig)
 	kube, err = NewKubernetes(kubeConfig, "", "default", false)
 
 	assert.Nil(t, err)

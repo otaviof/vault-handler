@@ -3,7 +3,10 @@
 VAULT_VERSION="${VAULT_VERSOIN:-1.1.0}"
 VAULT_TARGET_DIR="${VAULT_TARGET_DIR:-/home/travis/bin}"
 
+VAULT_URL="https://releases.hashicorp.com"
 VAULT_ZIP_FILE="vault_${VAULT_VERSION}_linux_amd64.zip"
+VAULT_URL_PATH="vault/${VAULT_VERSION}/${VAULT_ZIP_FILE}"
+
 VAULT_BIN="vault"
 
 function die () {
@@ -13,7 +16,7 @@ function die () {
 
 [ ! -d ${VAULT_TARGET_DIR} ] && die "Can't find target directory at '${VAULT_TARGET_DIR}'!"
 
-if ! wget "https://releases.hashicorp.com/vault/${VAULT_VERSION}/${VAULT_ZIP_FILE}" ; then
+if ! curl --location --output ${VAULT_ZIP_FILE} "${VAULT_URL}/${VAULT_URL_PATH}" ; then
     die "Can't download Vault!"
 fi
 

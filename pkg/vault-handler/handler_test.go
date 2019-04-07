@@ -54,6 +54,7 @@ func TestHandlerAuthenticateAppRole(t *testing.T) {
 		VaultSecretID: os.Getenv("VAULT_HANDLER_VAULT_SECRET_ID"),
 		InputDir:      inputDir,
 		OutputDir:     outputDir,
+		KubeConfig:    os.Getenv("KUBE_CONFIG"),
 		Namespace:     "default",
 	}
 	err = config.Validate()

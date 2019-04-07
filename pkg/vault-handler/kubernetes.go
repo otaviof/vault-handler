@@ -109,6 +109,7 @@ func (k *Kubernetes) localConfig() (*rest.Config, error) {
 			return nil, errors.New("environment HOME is empty, can't find '~/.kube/config' file")
 		}
 		k.kubeConfig = filepath.Join(homeDir, ".kube", "config")
+		k.logger.Info("Using default Kubernetes config file!")
 	}
 	k.logger.Infof("Using kubernetes configuration: '%s'", k.kubeConfig)
 

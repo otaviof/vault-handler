@@ -175,6 +175,7 @@ func compareSecrets(t *testing.T) {
 		})
 	})
 
+	t.Logf("Integration kube-config: '%s'", config.KubeConfig)
 	kube, err := vh.NewKubernetes(config.KubeConfig, config.Context, config.Namespace, config.InCluster)
 	assert.Nil(t, err)
 

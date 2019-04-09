@@ -37,14 +37,6 @@ run:
 test:
 	go test -race -coverprofile=coverage.txt -covermode=atomic -cover -v pkg/$(APP)/*
 
-snapshot:
-	goreleaser --rm-dist --snapshot
-
-release:
-	git tag $(VERSION)
-	git push origin $(VERSION)
-	goreleaser --rm-dist
-
 integration:
 	go test -v $(E2E_TEST_DIR)/*
 
@@ -52,3 +44,11 @@ codecov:
 	mkdir .ci || true
 	curl -s -o .ci/codecov.sh https://codecov.io/bash
 	bash .ci/codecov.sh -t $(CODECOV_TOKEN)
+
+snapshot:
+	goreleaser --rm-dist --snapshot
+
+release:
+	git tag $(VERSION)
+	git push origin $(VERSION)
+	goreleaser --rm-dist

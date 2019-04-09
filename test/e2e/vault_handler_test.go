@@ -182,8 +182,9 @@ func compareSecrets(t *testing.T) {
 	for group, data := range vaultSecrets {
 		kubeSecrets, err := kube.SecretRead(group)
 		assert.Nil(t, err)
+
 		for name, payload := range data {
-			t.Logf("Comparing Kubenetes secret '%s' key '%s', %d bytes", group, name, len(payload))
+			t.Logf("Comparing Kubernetes secret '%s' key '%s', %d bytes", group, name, len(payload))
 			assert.Equal(t, string(payload), fmt.Sprintf("%s\n", string(kubeSecrets[name])))
 		}
 	}

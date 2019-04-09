@@ -9,6 +9,9 @@ import (
 func TestUtilsFileExists(t *testing.T) {
 	found := fileExists("../../test/manifest.yaml")
 	assert.True(t, found)
+
+	found = fileExists("../../should/not/exist.yaml")
+	assert.False(t, found)
 }
 
 func TestUtilsReadFile(t *testing.T) {
@@ -19,4 +22,7 @@ func TestUtilsReadFile(t *testing.T) {
 func TestUtilsIsDir(t *testing.T) {
 	found := isDir("../../test")
 	assert.True(t, found)
+
+	found = isDir("../../should/not/exist")
+	assert.False(t, found)
 }

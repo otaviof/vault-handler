@@ -21,17 +21,15 @@
 
 # `vault-handler` (WIP)
 
-Is a manifest based application to upload and download secrets from
-[Hashicorp-Vault](https://www.vaultproject.io/). Therefore, the manifest file is promoted as
-"source-of-authority" over secrets that a given application may consume, where engineers can use
-the manifest to upload secrets, and later on use it as configuration input for downloading secrets
-on applications' behalf.
+Is a manifest based application to upload and download secrets from [Hashicorp-Vault][vault].
+Therefore, the manifest file is promoted as "source-of-authority" over secrets that a given
+application may consume, where engineers can use the manifest to upload secrets, and later on use
+it as configuration input for downloading secrets on applications' behalf.
 
 Once a set of secrets is uploaded to Vault, you can `copy` them over to Kubernetes, and keep secrets
 in sync by running `copy` command at later times.
 
-You can employ `vault-handler` as a Kubernetes
-[init-container](https://kubernetes.io/docs/concepts/workloads/pods/init-containers) in order to
+You can employ `vault-handler` as a Kubernetes [init-container][k8s-init-container] in order to
 download secrets, and have it as a command-line application to upload.
 
 ## Installing
@@ -44,8 +42,7 @@ go get -u github.com/otaviof/vault-handler/cmd/vault-handler
 
 ### Docker Images
 
-Docker images can be bound at [Docker-Hub](https://hub.docker.com/r/otaviof/vault-handler). And for
-example, to show the command line help use
+Docker images can be bound at [Docker-Hub][docker-hub]. And for example, to show help message:
 
 ``` bash
 docker run --interactive --tty otaviof/vault-handler:latest --help
@@ -61,10 +58,11 @@ Consider exporting configuration as environment variables to change the behavior
 
 ## HashiCorp Vault
 
-This application is a client of Vault. You can choose either
-[AppRole](https://www.vaultproject.io/docs/auth/approle.html) type of authentication, which will
-request a runtime token, or directly use a
-[existing token](https://www.vaultproject.io/docs/auth/token.html). Both ways are possible, but
+This application is using [Vault's API client][vault-client-go] to interact with the service,
+therefore, you can export [environment variables][vault-env-vars] to tweak its behavior.
+
+You can choose either [AppRole][vault-app-role] type of authentication, which will request a
+runtime token, or directly use a [existing token][vault-token]. Both ways are possible, but
 AppRole would be the recommended method.
 
 ## Configuration
@@ -153,20 +151,19 @@ the output directory, defined as command line parameter.
 
 In order to build and test `vault-hander` you will need the following:
 
-- [Docker-Compose](https://docs.docker.com/compose/): to run Vault in the background;
-- [GNU/Make](https://www.gnu.org/software/make/): to run building and testing commands;
-- [Dep](https://github.com/golang/dep): to manage `vendor` folder (use `make dep` to install);
-- [Vault-CLI](https://www.vaultproject.io/docs/commands/): to apply initial configuration to Vault;
+- [Docker-Compose][docker-compose]: to run Vault in the background;
+- [GNU/Make][gnu-make]: to run building and testing commands;
+- [Dep][dep]: to manage `vendor` folder (use `make dep` to install);
+- [Vault-CLI][vault-cli]: to apply initial configuration to Vault;
 
 ### Building and Testing
 
 Before running tests, you will need to spin up Vault in the background, and apply initial
-configuration to enable [AppRole](https://www.vaultproject.io/docs/auth/approle.html) authentication,
-and [secrets K/V store](https://www.vaultproject.io/docs/secrets/kv/index.html).
+configuration to enable [AppRole][vault-app-role] authentication, and secrets
+[K/V store][vault-kv-store].
 
-Additionally you need a Kubernetes cluster available, please consider
-[minikube project](https://kubernetes.io/docs/setup/minikube/). During [CI](./.travis.yml),
-[KinD](https://github.com/kubernetes-sigs/kind) project is used.
+Additionally you need a Kubernetes cluster available, please consider [minikube
+project][k8s-minikube]. During [CI](./.travis.yml), [KinD][k8s-kind] project is used.
 
 ``` bash
 docker-compose -d           # run vault in development mode
@@ -193,3 +190,18 @@ To clean it up, you can:
 docker-compose down --volumes
 rm -rf ./data
 ```
+
+[dep]: https://github.com/golang/dep
+[docker-compose]: https://docs.docker.com/compose
+[docker-hub]: https://hub.docker.com/r/otaviof/vault-handler
+[gnu-make]: https://www.gnu.org/software/make
+[k8s-init-container]: https://kubernetes.io/docs/concepts/workloads/pods/init-containers
+[k8s-kind]: https://github.com/kubernetes-sigs/kind
+[k8s-minikube]: https://kubernetes.io/docs/setup/minikube
+[vault-app-role]: https://www.vaultproject.io/docs/auth/approle.html
+[vault-cli]: https://www.vaultproject.io/docs/commands
+[vault-client-go]: https://github.com/hashicorp/vault/blob/master/api/client.go
+[vault-env-vars]: https://www.vaultproject.io/docs/commands/#environment-variables
+[vault-kv-store]: https://www.vaultproject.io/docs/secrets/kv/index.html
+[vault-token]: https://www.vaultproject.io/docs/auth/token.html
+[vault]: https://www.vaultproject.io

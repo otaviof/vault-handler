@@ -2,7 +2,6 @@ package vaulthandler
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,7 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // makeing sure gcp plugin is present
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // making sure gcp plugin is present
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -106,7 +105,7 @@ func (k *Kubernetes) localConfig() (*rest.Config, error) {
 	if k.kubeConfig == "" {
 		homeDir := os.Getenv("HOME")
 		if homeDir == "" {
-			return nil, errors.New("environment HOME is empty, can't find '~/.kube/config' file")
+			return nil, fmt.Errorf("environment HOME is empty, can't find '~/.kube/config' file")
 		}
 		k.kubeConfig = filepath.Join(homeDir, ".kube", "config")
 		k.logger.Info("Using default Kubernetes config file!")

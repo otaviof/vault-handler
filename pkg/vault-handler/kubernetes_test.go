@@ -1,9 +1,10 @@
 package vaulthandler
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var kube *Kubernetes
@@ -11,7 +12,7 @@ var kube *Kubernetes
 func TestKubernetesNew(t *testing.T) {
 	var err error
 
-	kubeConfig := os.Getenv("KUBE_CONFIG")
+	kubeConfig := os.Getenv("KUBECONFIG")
 	t.Logf("Test kube-config: '%s'", kubeConfig)
 	kube, err = NewKubernetes(kubeConfig, "", "default", false)
 

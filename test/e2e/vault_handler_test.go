@@ -6,9 +6,10 @@ import (
 	"os"
 	"testing"
 
-	vh "github.com/otaviof/vault-handler/pkg/vault-handler"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+
+	vh "github.com/otaviof/vault-handler/pkg/vault-handler"
 )
 
 var manifestFiles = []string{"../mock/manifest-1.yaml", "../mock/manifest-2.yaml"}
@@ -19,7 +20,7 @@ var config = &vh.Config{
 	OutputDir:     "/tmp",
 	VaultRoleID:   os.Getenv("VAULT_HANDLER_VAULT_ROLE_ID"),
 	VaultSecretID: os.Getenv("VAULT_HANDLER_VAULT_SECRET_ID"),
-	KubeConfig:    os.Getenv("KUBE_CONFIG"),
+	KubeConfig:    os.Getenv("KUBECONFIG"),
 	Context:       "",
 	Namespace:     "default",
 	InCluster:     false,

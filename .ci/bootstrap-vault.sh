@@ -24,8 +24,10 @@ function wait_for_vault () {
 }
 
 function enable_secrets_kv () {
-    vault secrets enable -version=2 kv || \
-        die "Can't enable secrets kv!"
+    if ! vault read sys/mounts |grep -q '^secret/.*version:2' ; then
+        vault secrets enable -version=2 kv || \
+            die "Can't enable secrets kv!"
+    fi
 }
 
 function enable_approle () {

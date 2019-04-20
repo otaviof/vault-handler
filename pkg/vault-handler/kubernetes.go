@@ -8,6 +8,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // making sure gcp plugin is present
@@ -119,6 +120,25 @@ func (k *Kubernetes) localConfig() (*rest.Config, error) {
 	return clientcmd.BuildConfigFromFlags(k.context, k.kubeConfig)
 }
 
+// createNamespace is not found.
+func (k *Kubernetes) createNamespace() error {
+	var err error
+
+	if _, err = k.clientset.CoreV1().Namespaces().Get(k.namespace, metav1.GetOptions{}); err != nil {
+		if !errors.IsNotFound(err) {
+			return err
+		}
+
+		k.logger.Infof("Creating namespace '%s'", k.namespace)
+		spec := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: k.namespace}}
+		if _, err = k.clientset.CoreV1().Namespaces().Create(spec); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // NewKubernetes instantiate object by checking if local or in-cluster configuration first.
 func NewKubernetes(kubeConfig, context, namespace string, inCluster bool) (*Kubernetes, error) {
 	var cfg *rest.Config
@@ -143,6 +163,9 @@ func NewKubernetes(kubeConfig, context, namespace string, inCluster bool) (*Kube
 	}
 
 	if k.clientset, err = kubernetes.NewForConfig(cfg); err != nil {
+		return nil, err
+	}
+	if err = k.createNamespace(); err != nil {
 		return nil, err
 	}
 

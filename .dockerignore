@@ -1,11 +1,14 @@
-.editorconfig
+.ci
+.cover*
 .env
 .git*
 .goreleaser*
+.travis*
 .vscode
-.ci
-.cover*
 README.md
+assets
 build
+docker-compose*
 test
 vendor
+version

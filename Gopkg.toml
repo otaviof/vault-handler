@@ -66,3 +66,11 @@ required = [
 [[override]]
   name = "github.com/json-iterator/go"
   version = "1.1.5"
+
+[[constraint]]
+  name = "github.com/subosito/gotenv"
+  version = "1.1.1"
+
+[[constraint]]
+  name = "gopkg.in/alessio/shellescape.v1"
+  version = "1.2.0"

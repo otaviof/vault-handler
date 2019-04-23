@@ -387,6 +387,14 @@
   version = "v1.3.0"
 
 [[projects]]
+  digest = "1:ffd3271461f8552dcabeca777edb7c31b51b4e945ec1b70f05512255453e2d81"
+  name = "github.com/subosito/gotenv"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "69b5b6104433beb2cb9c3ce00bdadf3c7c2d3f34"
+  version = "v1.1.1"
+
+[[projects]]
   branch = "master"
   digest = "1:bbe51412d9915d64ffaa96b51d409e070665efc5194fcf145c4a27d4133107a4"
   name = "golang.org/x/crypto"
@@ -483,6 +491,14 @@
   pruneopts = "NUT"
   revision = "54a98f90d1c46b7731eb8fb305d2a321c30ef610"
   version = "v1.5.0"
+
+[[projects]]
+  digest = "1:744998ce3c33d4d5e10e9110409de8026fc40a36dd95d635bff7f684981b7f05"
+  name = "gopkg.in/alessio/shellescape.v1"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "52074bc9df61e0d2af85c160b3a325403955d7fb"
+  version = "v1.2"
 
 [[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
@@ -655,8 +671,11 @@
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
+    "github.com/subosito/gotenv",
+    "gopkg.in/alessio/shellescape.v1",
     "gopkg.in/yaml.v2",
     "k8s.io/api/core/v1",
+    "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",

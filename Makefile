@@ -35,10 +35,10 @@ run:
 	go run -v cmd/$(APP)/* $(filter-out $@,$(MAKECMDGOALS)) ; exit $?
 
 test:
-	go test -race -coverprofile=coverage.txt -covermode=atomic -cover -v pkg/$(APP)/*
+	go test -failfast -race -coverprofile=coverage.txt -covermode=atomic -cover -v pkg/$(APP)/*
 
 integration:
-	go test -v $(E2E_TEST_DIR)/*
+	go test -failfast -v $(E2E_TEST_DIR)/*
 
 codecov:
 	mkdir .ci || true

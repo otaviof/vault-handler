@@ -433,6 +433,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:b521f10a2d8fa85c04a8ef4e62f2d1e14d303599a55d64dabf9f5a02f84d35eb"
+  name = "golang.org/x/sync"
+  packages = ["errgroup"]
+  pruneopts = "NUT"
+  revision = "112230192c580c3556b8cee6403af37a4fc5f28c"
+
+[[projects]]
+  branch = "master"
   digest = "1:50aeabe186087f314dd3cd64e1f460a4090886f34338caad1ec80090faa74458"
   name = "golang.org/x/sys"
   packages = [
@@ -662,6 +670,19 @@
   revision = "59698c7d9724b0f95f9dc9e7f7dfdcc3dfeceb82"
   version = "kubernetes-1.11.1"
 
+[[projects]]
+  digest = "1:5ade70023647bcd1170d1da3a8e901720b55c7e3cd75fcd8a43b1f31da78cce7"
+  name = "mvdan.cc/sh"
+  packages = [
+    "expand",
+    "interp",
+    "shell",
+    "syntax",
+  ]
+  pruneopts = "NUT"
+  revision = "6ae84988520ab9ea8ad7b2cc327f2261a30e7abf"
+  version = "v2.6.4"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -681,6 +702,8 @@
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/clientcmd",
+    "mvdan.cc/sh/expand",
+    "mvdan.cc/sh/shell",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

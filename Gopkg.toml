@@ -74,3 +74,11 @@ required = [
 [[constraint]]
   name = "gopkg.in/alessio/shellescape.v1"
   version = "1.2.0"
+
+[[constraint]]
+  branch = "fuzz"
+  name = "github.com/mvdan/sh"
+
+[[constraint]]
+  name = "mvdan.cc/sh"
+  version = "2.6.4"

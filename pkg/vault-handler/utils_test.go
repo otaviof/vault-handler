@@ -7,10 +7,10 @@ import (
 )
 
 func TestUtilsFileExists(t *testing.T) {
-	found := fileExists("../../test/manifest.yaml")
+	found := FileExists("../../test/manifest.yaml")
 	assert.True(t, found)
 
-	found = fileExists("../../should/not/exist.yaml")
+	found = FileExists("../../should/not/exist.yaml")
 	assert.False(t, found)
 }
 

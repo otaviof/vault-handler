@@ -7,8 +7,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// fileExists Check if path exists, boolean return.
-func fileExists(path string) bool {
+// FileExists Check if path exists, boolean return.
+func FileExists(path string) bool {
 	if _, err := os.Stat(path); err != nil {
 		return false
 	}
@@ -23,7 +23,7 @@ func readFile(path string) []byte {
 	logger := log.WithField("path", path)
 	logger.Infof("Reading file bytes")
 
-	if !fileExists(path) {
+	if !FileExists(path) {
 		logger.Fatal("Can't find file")
 	}
 	if fileBytes, err = ioutil.ReadFile(path); err != nil {

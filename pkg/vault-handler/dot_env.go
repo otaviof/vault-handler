@@ -21,7 +21,7 @@ type DotEnv struct {
 
 // Prepare by checking if dot-env (".env") file already exists, read it's contents.
 func (d *DotEnv) Prepare() error {
-	if !fileExists(d.fullPath) {
+	if !FileExists(d.fullPath) {
 		d.logger.Info("Dot-env file is not found.")
 		return nil
 	}
@@ -43,7 +43,7 @@ func (d *DotEnv) Write() error {
 	defer f.Close()
 
 	for k, v := range d.data {
-		if _, err = f.WriteString(fmt.Sprintf("%s=\"%s\"\n", k, shellescape.Quote(v))); err != nil {
+		if _, err = f.WriteString(fmt.Sprintf("%s=%s\n", k, shellescape.Quote(v))); err != nil {
 			return err
 		}
 	}
@@ -73,11 +73,13 @@ func (d *DotEnv) envVarName(file *File) string {
 // loadFiles loop over array of Files, load contents
 func (d *DotEnv) loadFiles() {
 	for _, file := range d.files {
-		key := d.envVarName(file)
-		if _, found := d.data[key]; found {
-			d.logger.Warnf("Variable '%s' is already preset on '%s'!", key, d.fullPath)
+		k := d.envVarName(file)
+		if _, found := d.data[k]; found {
+			d.logger.Warnf("Variable '%s' is already preset on '%s'!", k, d.fullPath)
 		}
-		d.data[key] = string(file.Payload)
+		v := string(file.Payload)
+		d.logger.Tracef("Adding entry on dot-env: '%s'='%s'", k, v)
+		d.data[k] = v
 	}
 }
 

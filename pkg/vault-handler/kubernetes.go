@@ -113,7 +113,7 @@ func (k *Kubernetes) localConfig() (*rest.Config, error) {
 	}
 	k.logger.Infof("Using kubernetes configuration: '%s'", k.kubeConfig)
 
-	if !fileExists(k.kubeConfig) {
+	if !FileExists(k.kubeConfig) {
 		return nil, fmt.Errorf("can't find kube-config file at: '%s'", k.kubeConfig)
 	}
 

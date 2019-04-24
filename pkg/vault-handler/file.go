@@ -74,7 +74,7 @@ func (f *File) Read(baseDir string) error {
 	var err error
 
 	fullPath := f.FilePath(baseDir)
-	if !fileExists(fullPath) {
+	if !FileExists(fullPath) {
 		return fmt.Errorf("can't find file '%s'", fullPath)
 	}
 	if f.Payload, err = ioutil.ReadFile(fullPath); err != nil {

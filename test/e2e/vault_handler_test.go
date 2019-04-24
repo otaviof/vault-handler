@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -18,6 +19,7 @@ var config = &vh.Config{
 	VaultAddr:     "http://127.0.0.1:8200",
 	InputDir:      "../mock/input-dir",
 	OutputDir:     "/tmp",
+	DotEnv:        true,
 	VaultRoleID:   os.Getenv("VAULT_HANDLER_VAULT_ROLE_ID"),
 	VaultSecretID: os.Getenv("VAULT_HANDLER_VAULT_SECRET_ID"),
 	KubeConfig:    os.Getenv("KUBECONFIG"),
@@ -69,23 +71,18 @@ func readFile(t *testing.T, path string) []byte {
 	return fileBytes
 }
 
-func fileExists(path string) bool {
-	if _, err := os.Stat(path); err != nil {
-		return false
-	}
-	return true
-}
-
 func cleanUp(t *testing.T) {
+	_ = os.Remove(path.Join(config.OutputDir, ".env"))
+
 	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
 		loopOverGroupSecrets(t, manifest, func(t *testing.T, group string, data *vh.SecretData) {
 			file := vh.NewFile(group, "", data, nil)
-			path := file.FilePath(config.OutputDir)
+			fullPath := file.FilePath(config.OutputDir)
 
-			t.Logf("Excluding file: '%s'", path)
+			t.Logf("Excluding file: '%s'", fullPath)
 
-			_ = os.Remove(path)
-			assert.False(t, fileExists(path))
+			_ = os.Remove(fullPath)
+			assert.False(t, vh.FileExists(fullPath))
 		})
 	})
 }

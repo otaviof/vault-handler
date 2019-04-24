@@ -4,10 +4,11 @@ import (
 	"os"
 	"strings"
 
-	vh "github.com/otaviof/vault-handler/pkg/vault-handler"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	vh "github.com/otaviof/vault-handler/pkg/vault-handler"
 )
 
 var rootCmd = &cobra.Command{
@@ -65,6 +66,7 @@ func configFromEnv() *vh.Config {
 	return &vh.Config{
 		DryRun:        viper.GetBool("dry-run"),
 		OutputDir:     viper.GetString("output-dir"),
+		DotEnv:        viper.GetBool("dot-env"),
 		InputDir:      viper.GetString("input-dir"),
 		VaultAddr:     viper.GetString("vault-addr"),
 		VaultToken:    viper.GetString("vault-token"),

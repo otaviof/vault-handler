@@ -3,10 +3,11 @@ package main
 import (
 	"os"
 
-	vh "github.com/otaviof/vault-handler/pkg/vault-handler"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	vh "github.com/otaviof/vault-handler/pkg/vault-handler"
 )
 
 var downloadCmd = &cobra.Command{
@@ -39,6 +40,7 @@ func init() {
 	flags := downloadCmd.PersistentFlags()
 
 	flags.String("output-dir", ".", "Output directory.")
+	flags.Bool("dot-env", false, "Create a dot-env file with downloaded secrets")
 
 	rootCmd.AddCommand(downloadCmd)
 

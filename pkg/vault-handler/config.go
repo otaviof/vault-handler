@@ -9,6 +9,7 @@ type Config struct {
 	DryRun        bool   // dry-run flag
 	OutputDir     string // output directory path
 	InputDir      string // input directory, when uploading
+	DotEnv        bool   // create a dot-env file with secrets
 	VaultAddr     string // vault api endpoint
 	VaultToken    string // vault token
 	VaultRoleID   string // vault approle role-id
@@ -47,7 +48,7 @@ func (c *Config) ValidateKubernetes() error {
 	if c.Namespace == "" {
 		return fmt.Errorf("namespace is not informed")
 	}
-	if c.KubeConfig != "" && !fileExists(c.KubeConfig) {
+	if c.KubeConfig != "" && !FileExists(c.KubeConfig) {
 		return fmt.Errorf("can't find kube-config file at '%s'", c.KubeConfig)
 	}
 	return nil

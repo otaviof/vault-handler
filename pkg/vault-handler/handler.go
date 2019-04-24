@@ -7,7 +7,7 @@ import (
 // Handler application primary runtime object.
 type Handler struct {
 	logger *log.Entry // logger
-	config *Config    // configuration instance
+	cfg    *Config    // configuration instance
 	vault  *Vault     // vault api instance
 }
 
@@ -19,12 +19,12 @@ type actOnSecret func(logger *log.Entry, group, secretType, vaultPath string, da
 func (h *Handler) Authenticate() error {
 	var err error
 
-	if h.config.VaultToken != "" {
+	if h.cfg.VaultToken != "" {
 		h.logger.Info("Using token based authentication")
-		h.vault.TokenAuth(h.config.VaultToken)
+		h.vault.TokenAuth(h.cfg.VaultToken)
 	} else {
 		h.logger.Info("Using AppRole based authentication")
-		if err = h.vault.AppRoleAuth(h.config.VaultRoleID, h.config.VaultSecretID); err != nil {
+		if err = h.vault.AppRoleAuth(h.cfg.VaultRoleID, h.cfg.VaultSecretID); err != nil {
 			return err
 		}
 	}
@@ -36,24 +36,36 @@ func (h *Handler) Authenticate() error {
 func (h *Handler) Upload(manifest *Manifest) error {
 	var err error
 
-	u := NewUpload(h.vault, h.config.InputDir)
+	u := NewUpload(h.vault, h.cfg.InputDir)
 	if err = h.loop(h.logger.WithField("action", "upload"), manifest, u.Prepare); err != nil {
 		return err
 	}
 
-	return u.Execute(h.config.DryRun)
+	return u.Execute(h.cfg.DryRun)
 }
 
 // Download files from vault based on manifest.
 func (h *Handler) Download(manifest *Manifest) error {
 	var err error
 
-	d := NewDownload(h.vault, h.config.OutputDir)
+	d := NewDownload(h.vault, h.cfg.OutputDir)
 	if err = h.loop(h.logger.WithField("action", "download"), manifest, d.Prepare); err != nil {
 		return err
 	}
+	if err = d.Execute(h.cfg.DryRun); err != nil {
+		return err
+	}
 
-	return d.Execute(h.config.DryRun)
+	if !h.cfg.DotEnv {
+		return nil
+	}
+
+	h.logger.Info("Creating dot-env representation of downloaded secrets...")
+	dotEnv := NewDotEnv(h.cfg.OutputDir, d.Files)
+	if err = dotEnv.Prepare(); err != nil {
+		return err
+	}
+	return dotEnv.Write(h.cfg.DryRun)
 }
 
 // Copy secrets from Vault into Kubernetes.
@@ -62,7 +74,7 @@ func (h *Handler) Copy(manifest *Manifest) error {
 	var err error
 
 	if k, err = NewKubernetes(
-		h.config.KubeConfig, h.config.Context, h.config.Namespace, h.config.InCluster,
+		h.cfg.KubeConfig, h.cfg.Context, h.cfg.Namespace, h.cfg.InCluster,
 	); err != nil {
 		return err
 	}
@@ -78,7 +90,7 @@ func (h *Handler) Copy(manifest *Manifest) error {
 	if err = c.Prepare(); err != nil {
 		return err
 	}
-	return c.Execute(h.config.DryRun)
+	return c.Execute(h.cfg.DryRun)
 }
 
 // loop execute the primary manifest item loop, yielding informed method.
@@ -105,7 +117,7 @@ func (h *Handler) loop(logger *log.Entry, manifest *Manifest, fn actOnSecret) er
 func NewHandler(config *Config) (*Handler, error) {
 	var err error
 
-	handler := &Handler{config: config, logger: log.WithField("type", "Handler")}
+	handler := &Handler{cfg: config, logger: log.WithField("type", "Handler")}
 	if handler.vault, err = NewVault(config.VaultAddr); err != nil {
 		return nil, err
 	}

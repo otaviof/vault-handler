@@ -1,14 +1,17 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"mvdan.cc/sh/shell"
 
 	vh "github.com/otaviof/vault-handler/pkg/vault-handler"
 )
@@ -159,6 +162,7 @@ func runCopy(t *testing.T, handler *vh.Handler) {
 
 func compareSecrets(t *testing.T) {
 	vaultSecrets := make(map[string]map[string][]byte)
+	dotEnvSecrets := make(map[string]string)
 
 	loopOverManifests(t, func(t *testing.T, manifest *vh.Manifest) {
 		loopOverGroupSecrets(t, manifest, func(t *testing.T, group string, data *vh.SecretData) {
@@ -170,6 +174,10 @@ func compareSecrets(t *testing.T) {
 				vaultSecrets[group] = make(map[string][]byte)
 			}
 			vaultSecrets[group][file.Properties.Name] = file.Payload
+
+			v := strings.ToUpper(fmt.Sprintf("%s_%s_%s",
+				group, file.Properties.Name, file.Properties.Extension))
+			dotEnvSecrets[v] = string(file.Payload)
 		})
 	})
 
@@ -185,5 +193,16 @@ func compareSecrets(t *testing.T) {
 			t.Logf("Comparing Kubernetes secret '%s' key '%s', %d bytes", group, name, len(payload))
 			assert.Equal(t, string(payload), fmt.Sprintf("%s\n", string(kubeSecrets[name])))
 		}
+	}
+
+	t.Log("Comparing with dot-env secrets...")
+	dotEnvData, err := shell.SourceFile(context.TODO(), path.Join(config.OutputDir, ".env"))
+	assert.Nil(t, err)
+
+	for k, v := range dotEnvSecrets {
+		t.Logf("Looking for expected dot-env variable '%s', value '%s'", k, v)
+		expected, found := dotEnvData[k]
+		assert.True(t, found)
+		assert.Equal(t, expected.String(), v)
 	}
 }

@@ -27,7 +27,7 @@ func TestDotEnvPrepare(t *testing.T) {
 }
 
 func TestDotEnvWrite(t *testing.T) {
-	err := dotEnv.Write()
+	err := dotEnv.Write(false)
 	assert.Nil(t, err)
 }
 
